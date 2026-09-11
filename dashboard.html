@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — لوحة التحكم</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+  transition: transform .3s;
+}
+
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sidebar-logo .brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px;
+  margin: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px;
+  color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px;
+  border-radius: var(--radius);
+  display: inline-block;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: .5px;
+  padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  border-radius: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: right;
+  font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+}
+.btn-logout {
+  width: 100%;
+  padding: 9px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  color: var(--red);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.topbar-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.shift-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  background: #f0fdf4;
+  color: var(--green);
+  border: 1px solid #bbf7d0;
+}
+
+.content { padding: 24px; flex: 1; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; }
+.stat-value { font-size: 24px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.stat-trend { font-size: 11px; margin-top: 4px; font-weight: 600; }
+.stat-trend.up { color: var(--green); }
+.stat-trend.down { color: var(--red); }
+
+/* ROWS */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.row3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.panel-title { font-size: 14px; font-weight: 800; color: var(--text); }
+.panel-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* QUICK GRID */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.quick-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all .15s;
+  color: var(--text);
+  font-family: inherit;
+  text-decoration: none;
+  display: block;
+}
+.quick-btn:hover { border-color: var(--primary); background: #f0f7ff; }
+.quick-btn .q-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.quick-btn .q-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* CHARTS */
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+  margin-top: 8px;
+}
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chart-bar {
+  width: 100%;
+  border-radius: 2px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  transition: height .3s;
+  min-height: 4px;
+  position: relative;
+  cursor: pointer;
+}
+.chart-bar.today { background: var(--primary); border-color: var(--primary); }
+.chart-label { font-size: 10px; color: var(--text-muted); }
+
+/* TABLES */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: right;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: #f8fafc;
+}
+.data-table td {
+  font-size: 13px;
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.data-table tr:hover td { background: #f8fafc; }
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  display: inline-block;
+}
+.badge-dine  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-take  { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.badge-del   { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.badge-paid  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.badge-open  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+/* MINI TABLES */
+.tables-mini {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.table-mini {
+  aspect-ratio: 1.2;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid;
+  cursor: pointer;
+  text-align: center;
+}
+.table-mini.available { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+.table-mini.occupied  { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
+.table-mini.reserved  { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+.table-mini.cleaning  { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+.table-mini .t-num { font-size: 14px; font-weight: 800; }
+
+/* BUTTONS */
+.btn-primary {
+  padding: 8px 16px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
+  padding: 8px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+.btn-secondary:hover { background: #e2e8f0; }
+
+.btn-sm-danger {
+  padding: 4px 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--red);
+  cursor: pointer;
+}
+.btn-sm-danger:hover { background: #fee2e2; }
+
+/* MODALS */
+.overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 520px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.modal-close:hover { color: var(--text); }
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.form-group input, .form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: #ffffff;
+  outline: none;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--primary);
+}
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+  background: #f8fafc;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.perm-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* User management section */
+.users-management-panel {
+  margin-top: 24px;
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item active" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <span class="topbar-title" id="pageHeaderTitle">لوحة التحكم الرئيسية</span>
+    <div class="topbar-right">
+      <div class="shift-badge" id="shiftBadge">وردية تشغيل نشطة</div>
+      <div class="topbar-date" id="topbarDate">—</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD VIEW: ADMIN / OM / MANAGER -->
+    <div id="generalDashboardView">
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">مبيعات اليوم الصافية</div>
+          <div class="stat-value" id="statSales">0 ج</div>
+          <div class="stat-sub" id="statSalesSub">0 فاتورة مكتملة</div>
+          <div class="stat-trend up" id="statSalesTrend">نقطة انطلاق اليوم</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">الطلبات الجارية المفتوحة</div>
+          <div class="stat-value" id="statOrders">0</div>
+          <div class="stat-sub">صالة + تيك أواي + ديليفري</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">حالة الطاولات</div>
+          <div class="stat-value" id="statTables">0 / 0</div>
+          <div class="stat-sub" id="statTablesSub">مشغولة من الإجمالي</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-label">تنبيهات نواقص المخزون</div>
+          <div class="stat-value" id="statStock">0</div>
+          <div class="stat-sub">أصناف قاربت على النفاد</div>
+        </div>
+      </div>
+
+      <!-- ROW 2 -->
+      <div class="row2">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">مبيعات آخر 7 أيام</span>
+            <span class="panel-badge" id="weekTotal">إجمالي: 0 ج</span>
+          </div>
+          <div class="chart-bars" id="weekChart"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">الوصول السريع للعمليات</span>
+          </div>
+          <div class="quick-grid">
+            <a class="quick-btn" onclick="navigate('pos.html')">
+              <div class="q-title">الكاشير (POS)</div>
+              <div class="q-sub">فتح طلب جديد</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('tables.html')">
+              <div class="q-title">الطاولات</div>
+              <div class="q-sub">الجلسات والحجوزات</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('delivery.html')">
+              <div class="q-title">الديليفري</div>
+              <div class="q-sub">تتبع الطيارين</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('orders.html')">
+              <div class="q-title">الفواتير</div>
+              <div class="q-sub">سجل المبيعات</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('inventory.html')">
+              <div class="q-title">المخازن</div>
+              <div class="q-sub">الأصناف والخامات</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('accounts.html')">
+              <div class="q-title">اليومية</div>
+              <div class="q-sub">حسابات الدرج</div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3 -->
+      <div class="row3">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">آخر الطلبات المسجلة</span>
+            <span class="panel-badge" id="ordersCount">0 طلب</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>النوع</th>
+                  <th>الطاولة / العميل</th>
+                  <th>الإجمالي</th>
+                  <th>الحالة</th>
+                  <th>الوقت</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody">
+                <tr>
+                  <td colspan="6" style="text-align:center;color:var(--text-muted);padding:18px;">لا توجد طلبات مسجلة اليوم</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">طاولات الصالة</span>
+              <span class="panel-badge" id="tablesBadge">0 مشغول</span>
+            </div>
+            <div class="tables-mini" id="tablesMini"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">تنبيهات المخزن</span>
+            </div>
+            <div id="stockList">
+              <div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0;">حالة المخزون مستقرة</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION: ADMIN USER & ACCOUNT MANAGEMENT (ADMIN ONLY) -->
+      <div class="panel users-management-panel" id="adminUserManagementPanel" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <span class="panel-title">إدارة الحسابات والمستخدمين (Admin)</span>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">إنشاء حسابات الموظفين وتحديد الأدوار والصلاحيات وحالة التفعيل</div>
+          </div>
+          <button class="btn-primary" onclick="openCreateUserModal()">إضافة مستخدم جديد</button>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="usersTable">
+            <thead>
+              <tr>
+                <th>اسم المستخدم</th>
+                <th>الاسم الكامل</th>
+                <th>البريد الإلكتروني</th>
+                <th>الدور (Role)</th>
+                <th>الحالة</th>
+                <th>تاريخ الإنشاء</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW: CASHIER SPECIFIC OVERVIEW -->
+    <div id="cashierDashboardView" style="display:none;">
+      <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-card">
+          <div class="stat-label">طلبات الصالة والديليفري النشطة</div>
+          <div class="stat-value" id="cashierStatOpenOrders">0</div>
+          <div class="stat-sub">قيد التجهيز أو الخدمة</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">طاولات الصالة المشغولة</div>
+          <div class="stat-value" id="cashierStatTablesBusy">0</div>
+          <div class="stat-sub">من إجمالي طاولات الصالة</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">طلبات التوصيل قيد النقل</div>
+          <div class="stat-value" id="cashierStatDeliveryPending">0</div>
+          <div class="stat-sub">مع طياري التوصيل</div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">وصول سريع لمهام الكاشير</span>
+          </div>
+          <div class="quick-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <a class="quick-btn" onclick="navigate('pos.html')">
+              <div class="q-title">نقطة البيع (POS)</div>
+              <div class="q-sub">إنهاء ودفع الطلبات</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('tables.html')">
+              <div class="q-title">خريطة الطاولات</div>
+              <div class="q-sub">الجلسات والمأدبات</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('delivery.html')">
+              <div class="q-title">الديليفري</div>
+              <div class="q-sub">شحن ومتابعة الكابتن</div>
+            </a>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">خريطة الصالة المصغرة</span>
+            <span class="panel-badge" onclick="navigate('tables.html')" style="cursor:pointer;">فتح شاشة الطاولات</span>
+          </div>
+          <div class="tables-mini" id="cashierTablesMini"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW: ACCOUNTS SPECIFIC OVERVIEW -->
+    <div id="accountsDashboardView" style="display:none;">
+      <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="stat-card">
+          <div class="stat-label">إجمالي إيرادات المبيعات اليوم</div>
+          <div class="stat-value" id="accStatGrossSales">0 ج</div>
+          <div class="stat-sub" id="accStatOrdersCount">0 فاتورة</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">إجمالي مصروفات اليوم</div>
+          <div class="stat-value" id="accStatExpenses" style="color:var(--red);">0 ج</div>
+          <div class="stat-sub">سندات صرف وخروج نقدية</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">صافي النقد المتوقع بالدرج</div>
+          <div class="stat-value" id="accStatNetCash" style="color:var(--green);">0 ج</div>
+          <div class="stat-sub">المبيعات مطروحاً منها المصروفات</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">مدفوعات الفيزا والتحويلات</div>
+          <div class="stat-value" id="accStatNonCash">0 ج</div>
+          <div class="stat-sub">غير مضافة لدرج الكاش الفعلي</div>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">الوصول السريع للقسم المالي</span>
+          </div>
+          <div class="quick-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <a class="quick-btn" onclick="navigate('orders.html')">
+              <div class="q-title">سجل الفواتير</div>
+              <div class="q-sub">فحص وتدقيق القيود</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('accounts.html')">
+              <div class="q-title">الحسابات اليومية</div>
+              <div class="q-sub">جرد الدرج وتقفيل الوردية</div>
+            </a>
+            <a class="quick-btn" onclick="navigate('expenses.html')">
+              <div class="q-title">المصروفات</div>
+              <div class="q-sub">إثبات بنود الصرف</div>
+            </a>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">ملخص مبيعات الأسبوع المالية</span>
+            <span class="panel-badge" id="accWeekTotal">إجمالي: 0 ج</span>
+          </div>
+          <div class="chart-bars" id="accWeekChart"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: CREATE USER (ADMIN) -->
+<div class="overlay" id="createUserModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="userModalTitle">إنشاء حساب مستخدم جديد</span>
+      <button class="modal-close" onclick="closeModal('createUserModal')">✕</button>
+    </div>
+
+    <form id="userForm" onsubmit="handleSaveUser(event)">
+      <input type="hidden" id="editUserId" value="" />
+      
+      <div class="form-group">
+        <label for="uUsername">اسم المستخدم (Username) *</label>
+        <input type="text" id="uUsername" placeholder="مثال: khaled_pos" required />
+      </div>
+
+      <div class="form-group">
+        <label for="uFullName">الاسم الكامل للموظف *</label>
+        <input type="text" id="uFullName" placeholder="مثال: خالد عبد الرحمن" required />
+      </div>
+
+      <div class="form-group">
+        <label for="uEmail">البريد الإلكتروني *</label>
+        <input type="email" id="uEmail" placeholder="مثال: khaled@restaurant.com" required />
+      </div>
+
+      <div class="form-group">
+        <label for="uPassword">كلمة المرور *</label>
+        <input type="password" id="uPassword" placeholder="6 أحرف على الأقل" required />
+      </div>
+
+      <div class="form-group">
+        <label for="uRole">الدور الأساسي (Role) *</label>
+        <select id="uRole" onchange="handleRoleSelectChange(this.value)">
+          <option value="cashier">كاشير (Cashier)</option>
+          <option value="manager">مدير الصالة (Manager)</option>
+          <option value="om">مدير العمليات (OM)</option>
+          <option value="accounts">محاسب (Accounts)</option>
+          <option value="admin">مدير النظام (Admin)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>صلاحيات الوصول الإضافية</label>
+        <div class="permissions-grid">
+          <label class="perm-check"><input type="checkbox" id="perm_pos" checked /> الكاشير (POS)</label>
+          <label class="perm-check"><input type="checkbox" id="perm_tables" checked /> الطاولات</label>
+          <label class="perm-check"><input type="checkbox" id="perm_delivery" checked /> الديليفري</label>
+          <label class="perm-check"><input type="checkbox" id="perm_orders" checked /> سجل الفواتير</label>
+          <label class="perm-check"><input type="checkbox" id="perm_inventory" /> المخزن والمشتريات</label>
+          <label class="perm-check"><input type="checkbox" id="perm_accounts" /> الحسابات اليومية</label>
+          <label class="perm-check"><input type="checkbox" id="perm_expenses" /> المصروفات</label>
+          <label class="perm-check"><input type="checkbox" id="perm_crm" /> العملاء والموردين</label>
+          <label class="perm-check"><input type="checkbox" id="perm_guard" /> سجل الرقابة</label>
+          <label class="perm-check"><input type="checkbox" id="perm_settings" /> إعدادات النظام</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="uStatus">حالة تفعيل الحساب</label>
+        <select id="uStatus">
+          <option value="active">نشط (Active)</option>
+          <option value="disabled">معطل (Disabled)</option>
+        </select>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('createUserModal')">إلغاء</button>
+        <button type="submit" class="btn-primary" id="saveUserBtn">حفظ وتثبيت الحساب</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+import AuthService, { ROLE_LABELS } from './auth.js';
+
+// 1. Guard page access
+if (!AuthService.enforcePage('dashboard.html')) {
+  // Enforce handles redirection
+}
+
+const currentSession = AuthService.getSession();
+window.currentSession = currentSession;
+
+// Navigation helper
+window.navigate = function(page) {
+  window.location.href = page;
+};
+
+// Logout helper
+window.handleLogout = async function() {
+  await AuthService.logout();
+};
+
+// Modals
+window.openModal = function(id) {
+  document.getElementById(id).classList.add('open');
+};
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('open');
+};
+
+// Date
+function updateHeaderDate() {
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('topbarDate').textContent = now.toLocaleDateString('ar-EG', opts);
+}
+updateHeaderDate();
+
+// Load dashboard content based on role
+function renderDashboard() {
+  AuthService.renderSidebarUI();
+
+  const role = currentSession ? currentSession.role : 'cashier';
+  const headerTitle = document.getElementById('pageHeaderTitle');
+
+  if (role === 'admin') {
+    headerTitle.textContent = 'لوحة تحكم مدير النظام (Admin)';
+    document.getElementById('generalDashboardView').style.display = 'block';
+    document.getElementById('adminUserManagementPanel').style.display = 'block';
+    loadGeneralStats();
+    loadUsersTable();
+  } else if (role === 'om') {
+    headerTitle.textContent = 'لوحة تحكم مدير العمليات (OM)';
+    document.getElementById('generalDashboardView').style.display = 'block';
+    document.getElementById('adminUserManagementPanel').style.display = 'none';
+    loadGeneralStats();
+  } else if (role === 'manager') {
+    headerTitle.textContent = 'لوحة تحكم مدير الصالة (Manager)';
+    document.getElementById('generalDashboardView').style.display = 'block';
+    document.getElementById('adminUserManagementPanel').style.display = 'none';
+    loadGeneralStats();
+  } else if (role === 'cashier') {
+    headerTitle.textContent = 'شاشة الكاشير والمبيعات السريعة';
+    document.getElementById('generalDashboardView').style.display = 'none';
+    document.getElementById('cashierDashboardView').style.display = 'block';
+    loadCashierStats();
+  } else if (role === 'accounts') {
+    headerTitle.textContent = 'لوحة الحسابات والمالية (Accounts)';
+    document.getElementById('generalDashboardView').style.display = 'none';
+    document.getElementById('accountsDashboardView').style.display = 'block';
+    loadAccountsStats();
+  }
+}
+
+// -------------------------------------------------------------
+// General Stats (Admin, OM, Manager)
+// -------------------------------------------------------------
+function loadGeneralStats() {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const tables = JSON.parse(localStorage.getItem('cs_tables') || '[]');
+  const stock  = JSON.parse(localStorage.getItem('cs_stock')  || '[]');
+
+  const today = new Date().toISOString().split('T')[0];
+  const todayOrders = orders.filter(o => o.date === today && o.status !== 'cancelled' && !['officer', 'cl', 'hospitality'].includes(o.payMethod));
+  const todayTotal = todayOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  const todayCount = todayOrders.length;
+
+  document.getElementById('statSales').textContent = todayTotal.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('statSalesSub').textContent = todayCount + ' فاتورة فعلية';
+
+  const openCount = orders.filter(o => o.status === 'open' || o.dStatus === 'pending' || o.dStatus === 'delivering').length;
+  document.getElementById('statOrders').textContent = openCount;
+
+  const occupiedTables = tables.filter(t => t.status === 'busy' || t.status === 'occupied').length;
+  document.getElementById('statTables').textContent = occupiedTables + ' / ' + tables.length;
+
+  const lowStockCount = stock.filter(s => (parseFloat(s.qty) || 0) <= (parseFloat(s.minQty) || 0)).length;
+  document.getElementById('statStock').textContent = lowStockCount;
+
+  // Week Chart
+  renderWeekChart('weekChart', 'weekTotal', orders, today);
+
+  // Recent Orders
+  renderRecentOrdersTable(orders);
+
+  // Tables Mini
+  renderTablesMini('tablesMini', tables);
+
+  // Low stock list
+  renderLowStockList(stock);
+}
+
+// -------------------------------------------------------------
+// Cashier Specific Stats
+// -------------------------------------------------------------
+function loadCashierStats() {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const tables = JSON.parse(localStorage.getItem('cs_tables') || '[]');
+
+  const openCount = orders.filter(o => o.status === 'open').length;
+  document.getElementById('cashierStatOpenOrders').textContent = openCount;
+
+  const busyCount = tables.filter(t => t.status === 'busy' || t.status === 'occupied').length;
+  document.getElementById('cashierStatTablesBusy').textContent = busyCount + ' / ' + tables.length;
+
+  const pendingDelivery = orders.filter(o => o.type === 'delivery' && (o.dStatus === 'pending' || o.dStatus === 'delivering')).length;
+  document.getElementById('cashierStatDeliveryPending').textContent = pendingDelivery;
+
+  renderTablesMini('cashierTablesMini', tables);
+}
+
+// -------------------------------------------------------------
+// Accounts Specific Stats
+// -------------------------------------------------------------
+function loadAccountsStats() {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const expenses = JSON.parse(localStorage.getItem('cs_expenses') || '[]');
+  const today = new Date().toISOString().split('T')[0];
+
+  const todayOrders = orders.filter(o => o.date === today && o.status !== 'cancelled');
+  const grossSales = todayOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  document.getElementById('accStatGrossSales').textContent = grossSales.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('accStatOrdersCount').textContent = todayOrders.length + ' فاتورة مسجلة';
+
+  const todayExpenses = expenses.filter(e => (e.date || '').startsWith(today));
+  const expTotal = todayExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  document.getElementById('accStatExpenses').textContent = expTotal.toLocaleString('ar-EG') + ' ج';
+
+  // Cash in drawer (only orders paid in cash minus cash expenses)
+  const cashSales = todayOrders.filter(o => o.payMethod === 'cash').reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  const netCash = Math.max(0, cashSales - expTotal);
+  document.getElementById('accStatNetCash').textContent = netCash.toLocaleString('ar-EG') + ' ج';
+
+  const nonCashSales = todayOrders.filter(o => ['card', 'transfer'].includes(o.payMethod)).reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  document.getElementById('accStatNonCash').textContent = nonCashSales.toLocaleString('ar-EG') + ' ج';
+
+  renderWeekChart('accWeekChart', 'accWeekTotal', orders, today);
+}
+
+// -------------------------------------------------------------
+// Chart Helper
+// -------------------------------------------------------------
+function renderWeekChart(chartId, totalId, orders, today) {
+  const daysNames = ['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+  const chartDays = [];
+  for(let i=6; i>=0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dStr = d.toISOString().split('T')[0];
+    const dOrders = orders.filter(o => o.date === dStr && o.status !== 'cancelled');
+    const dTotal = dOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+    chartDays.push({ date: dStr, total: dTotal, dayName: daysNames[d.getDay()] });
+  }
+
+  const maxVal = Math.max(...chartDays.map(cd => cd.total), 1);
+  const chartEl = document.getElementById(chartId);
+  if (!chartEl) return;
+  chartEl.innerHTML = '';
+  let weekTotal = 0;
+
+  chartDays.forEach(cd => {
+    weekTotal += cd.total;
+    const pct = Math.max(8, Math.round((cd.total / maxVal) * 100));
+    const isToday = cd.date === today;
+    chartEl.innerHTML += `
+      <div class="chart-bar-wrap">
+        <div class="chart-bar ${isToday ? 'today' : ''}" style="height:${pct}%" title="${cd.total.toLocaleString('ar-EG')} ج"></div>
+        <span class="chart-label">${cd.dayName}</span>
+      </div>`;
+  });
+  const totalEl = document.getElementById(totalId);
+  if (totalEl) totalEl.textContent = 'إجمالي: ' + weekTotal.toLocaleString('ar-EG') + ' ج';
+}
+
+function renderRecentOrdersTable(orders) {
+  const tbody = document.getElementById('ordersBody');
+  if (!tbody) return;
+  const recent = orders.slice(-6).reverse();
+  if (recent.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:18px;">لا توجد طلبات مسجلة اليوم</td></tr>';
+    return;
+  }
+  const typeMap = { dine:'صالة', take:'تيك أواي', delivery:'ديليفري' };
+  const typeBadge = { dine:'badge-dine', take:'badge-take', delivery:'badge-del' };
+  const statMap = { open:'مفتوح', paid:'مدفوع', cancelled:'ملغي' };
+  const statBadge = { open:'badge-open', paid:'badge-paid', cancelled:'badge-open' };
+
+  tbody.innerHTML = recent.map((o, idx) => `
+    <tr>
+      <td style="font-weight:700;">#${o.id || idx+1}</td>
+      <td><span class="badge ${typeBadge[o.type]||'badge-dine'}">${typeMap[o.type]||o.type}</span></td>
+      <td>${o.tableLabel || o.customer || '—'}</td>
+      <td style="font-weight:700;color:var(--primary);">${(parseFloat(o.total)||0).toLocaleString('ar-EG')} ج</td>
+      <td><span class="badge ${statBadge[o.status]||'badge-open'}">${statMap[o.status]||o.status}</span></td>
+      <td style="font-size:12px;color:var(--text-muted);">${o.time || '—'}</td>
+    </tr>
+  `).join('');
+  document.getElementById('ordersCount').textContent = orders.length + ' طلب';
+}
+
+function renderTablesMini(containerId, tables) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!tables.length) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">لا توجد طاولات مضافة</div>';
+    return;
+  }
+  el.innerHTML = tables.slice(0, 8).map(t => {
+    let st = t.status || 'available';
+    if (st === 'free') st = 'available';
+    if (st === 'busy') st = 'occupied';
+    const labelMap = { available:'متاحة', occupied:'مشغولة', reserved:'محجوزة', cleaning:'تنظيف' };
+    return `
+      <div class="table-mini ${st}" onclick="navigate('tables.html')" title="طاولة ${t.number}">
+        <div class="t-num">${t.number}</div>
+        <div>${labelMap[st] || st}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderLowStockList(stock) {
+  const el = document.getElementById('stockList');
+  if (!el) return;
+  const lowItems = stock.filter(s => (parseFloat(s.qty)||0) <= (parseFloat(s.minQty)||0));
+  if (lowItems.length === 0) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:12px;padding:12px 0;">حالة المخزون ممتازة، لا نواقص</div>';
+    return;
+  }
+  el.innerHTML = lowItems.slice(0, 4).map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:13px;font-weight:600;">${s.name}</span>
+      <span style="font-size:12px;color:var(--red);font-weight:700;">${s.qty} ${s.unit} متبقي</span>
+    </div>
+  `).join('');
+}
+
+// -------------------------------------------------------------
+// Admin: User Management CRUD
+// -------------------------------------------------------------
+function loadUsersTable() {
+  const tbody = document.getElementById('usersTableBody');
+  if (!tbody) return;
+  const users = AuthService.getUsers();
+
+  tbody.innerHTML = users.map(u => {
+    const isActive = u.active !== false;
+    const isRootAdmin = u.username === 'admin' || u.username === 'mahmoud.mostfa' || (u.email && u.email.toLowerCase() === 'mahmoud.mostfa@app.com') || u.id === '3SNhsc2ilvc42YWXhKpLzBO5Yu32';
+    const roleBadgeText = ROLE_LABELS[u.role] || u.role;
+
+    return `
+      <tr>
+        <td style="font-weight:700;">${u.username}</td>
+        <td>${u.fullName || u.username}</td>
+        <td>${u.email || '—'}</td>
+        <td><span class="badge badge-dine">${roleBadgeText}</span></td>
+        <td>
+          <span class="badge ${isActive ? 'badge-paid' : 'badge-open'}">
+            ${isActive ? 'نشط' : 'معطل'}
+          </span>
+        </td>
+        <td style="font-size:11px;color:var(--text-muted);">
+          ${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-EG') : '—'}
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-secondary" style="padding:3px 8px;font-size:11px;" onclick="openEditUserModal('${u.id || u.username}')">تعديل</button>
+            ${!isRootAdmin ? `
+              <button class="btn-secondary" style="padding:3px 8px;font-size:11px;" onclick="toggleUserActiveStatus('${u.id || u.username}', ${!isActive})">
+                ${isActive ? 'تعطيل' : 'تفعيل'}
+              </button>
+              <button class="btn-sm-danger" onclick="handleDeleteUser('${u.id || u.username}')">حذف</button>
+            ` : '<span style="font-size:11px;color:var(--text-muted);padding:4px;">حساب أساسي</span>'}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.openCreateUserModal = function() {
+  document.getElementById('userModalTitle').textContent = 'إنشاء حساب مستخدم جديد';
+  document.getElementById('editUserId').value = '';
+  document.getElementById('uUsername').value = '';
+  document.getElementById('uUsername').disabled = false;
+  document.getElementById('uFullName').value = '';
+  document.getElementById('uEmail').value = '';
+  document.getElementById('uPassword').value = '';
+  document.getElementById('uPassword').required = true;
+  document.getElementById('uRole').value = 'cashier';
+  document.getElementById('uStatus').value = 'active';
+  handleRoleSelectChange('cashier');
+  openModal('createUserModal');
+};
+
+window.openEditUserModal = function(userId) {
+  const users = AuthService.getUsers();
+  const targetId = String(userId || '').trim().toLowerCase();
+  const u = users.find(x => 
+    (x.id && String(x.id).trim().toLowerCase() === targetId) || 
+    (x.username && String(x.username).trim().toLowerCase() === targetId) ||
+    (x.email && String(x.email).trim().toLowerCase() === targetId)
+  );
+  if (!u) {
+    console.warn("المستخدم غير موجود للتعديل:", userId);
+    return;
+  }
+
+  document.getElementById('userModalTitle').textContent = 'تعديل بيانات المستخدم: ' + (u.fullName || u.username);
+  document.getElementById('editUserId').value = u.id || u.username;
+  document.getElementById('uUsername').value = u.username;
+  document.getElementById('uUsername').disabled = true; // username immutable
+  document.getElementById('uFullName').value = u.fullName || '';
+  document.getElementById('uEmail').value = u.email || '';
+  document.getElementById('uPassword').value = '';
+  document.getElementById('uPassword').required = false; // optional on edit
+  document.getElementById('uRole').value = u.role || 'cashier';
+  document.getElementById('uStatus').value = u.active !== false ? 'active' : 'disabled';
+  
+  // permissions
+  const perms = u.permissions || [];
+  ['pos', 'tables', 'delivery', 'orders', 'inventory', 'accounts', 'expenses', 'crm', 'guard', 'settings'].forEach(p => {
+    const chk = document.getElementById('perm_' + p);
+    if (chk) chk.checked = perms.includes('all') || perms.includes(p);
+  });
+
+  openModal('createUserModal');
+};
+
+window.handleRoleSelectChange = function(role) {
+  // Preset recommended permissions based on role
+  const presets = {
+    admin: ['pos', 'tables', 'delivery', 'orders', 'inventory', 'accounts', 'expenses', 'crm', 'guard', 'settings'],
+    om: ['pos', 'tables', 'delivery', 'orders', 'inventory', 'accounts', 'expenses', 'crm', 'guard'],
+    manager: ['pos', 'tables', 'delivery', 'orders', 'inventory', 'crm', 'guard'],
+    cashier: ['pos', 'tables', 'delivery'],
+    accounts: ['orders', 'accounts', 'expenses']
+  };
+  const allowed = presets[role] || [];
+  ['pos', 'tables', 'delivery', 'orders', 'inventory', 'accounts', 'expenses', 'crm', 'guard', 'settings'].forEach(p => {
+    const chk = document.getElementById('perm_' + p);
+    if (chk) chk.checked = allowed.includes(p);
+  });
+};
+
+window.handleSaveUser = async function(e) {
+  e.preventDefault();
+  const editId = document.getElementById('editUserId').value;
+  const username = document.getElementById('uUsername').value.trim();
+  const fullName = document.getElementById('uFullName').value.trim();
+  const email = document.getElementById('uEmail').value.trim();
+  const password = document.getElementById('uPassword').value;
+  const role = document.getElementById('uRole').value;
+  const active = document.getElementById('uStatus').value === 'active';
+
+  const permissions = [];
+  ['pos', 'tables', 'delivery', 'orders', 'inventory', 'accounts', 'expenses', 'crm', 'guard', 'settings'].forEach(p => {
+    const chk = document.getElementById('perm_' + p);
+    if (chk && chk.checked) permissions.push(p);
+  });
+
+  try {
+    if (editId) {
+      // Edit
+      const updates = { username, fullName, email, role, permissions, active };
+      if (password) updates.password = password;
+      const res = AuthService.updateUser(editId, updates);
+      if (res) {
+        alert('تم تحديث بيانات المستخدم بنجاح');
+      } else {
+        alert('تم حفظ البيانات');
+      }
+    } else {
+      // Create
+      if (!password) {
+        alert('يرجى كتابة كلمة المرور');
+        return;
+      }
+      await AuthService.createUser({ username, fullName, email, password, role, permissions, active });
+      alert('تم إنشاء المستخدم بنجاح وتعيين الصلاحيات');
+    }
+    closeModal('createUserModal');
+    loadUsersTable();
+  } catch (err) {
+    alert(err.message || 'حدث خطأ أثناء حفظ المستخدم');
+  }
+};
+
+window.toggleUserActiveStatus = function(userId, newStatus) {
+  try {
+    AuthService.updateUser(userId, { active: newStatus });
+    loadUsersTable();
+  } catch (err) {
+    console.warn("toggleUserActiveStatus notice:", err);
+  }
+};
+
+window.handleDeleteUser = function(userId) {
+  try {
+    AuthService.deleteUser(userId);
+    loadUsersTable();
+  } catch (err) {
+    console.warn("handleDeleteUser notice:", err);
+  }
+};
+
+// Initial load
+renderDashboard();
+</script>
+
+</body>
+</html>

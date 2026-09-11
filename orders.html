@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — سجل الفواتير والمبيعات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+  flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px; margin: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #e2e8f0; color: #334155; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px; color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px; border-radius: var(--radius);
+  display: inline-block; margin-top: 2px; font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: .5px; padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+  cursor: pointer; transition: background .15s, color .15s;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; background: none;
+  width: 100%; text-align: right; font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%; padding: 9px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--radius); color: var(--red);
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+/* STATS BAR */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+
+/* CONTROLS BAR */
+.controls-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.filters-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+}
+.filter-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.search-input {
+  padding: 7px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: #ffffff; width: 220px;
+}
+
+/* ORDERS LIST / TABLE */
+.orders-table-wrap {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+table.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: right;
+}
+table.orders-table th {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+table.orders-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+table.orders-table tr:hover td { background: var(--surface2); }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge.dine     { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge.take     { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.badge.delivery { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+
+.btn-table-action {
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  color: var(--text); cursor: pointer;
+}
+.btn-table-action:hover { background: var(--surface2); }
+.btn-table-action.danger { color: var(--red); border-color: #fecaca; }
+.btn-table-action.danger:hover { background: #fef2f2; }
+
+/* MODALS */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 500px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close {
+  background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-muted);
+}
+
+.invoice-preview {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.inv-row { display: flex; justify-content: space-between; padding: 4px 0; }
+.inv-total { font-weight: 800; font-size: 16px; color: var(--primary); border-top: 1px solid var(--border); padding-top: 8px; margin-top: 6px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 700; display: none; z-index: 200;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item active" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">سجل فواتير المبيعات الشامل</span>
+    <div class="topbar-right">
+      <button class="btn-table-action" onclick="navigate('pos.html')">فتح شاشة الكاشير</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">إجمالي عدد الفواتير</div>
+        <div class="stat-val" id="statOrdersCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">إجمالي المبيعات المكتملة</div>
+        <div class="stat-val" id="statOrdersTotal">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">متوسط قيمة الفاتورة</div>
+        <div class="stat-val" id="statOrdersAvg">0 ج</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+      <div class="filters-group">
+        <button class="filter-btn active" id="f-all" onclick="setFilter('all')">الكل</button>
+        <button class="filter-btn" id="f-dine" onclick="setFilter('dine')">صالة</button>
+        <button class="filter-btn" id="f-take" onclick="setFilter('take')">تيك أواي</button>
+        <button class="filter-btn" id="f-delivery" onclick="setFilter('delivery')">ديليفري</button>
+      </div>
+
+      <input 
+        type="text" 
+        id="searchOrders" 
+        class="search-input" 
+        placeholder="بحث برقم الفاتورة أو العميل..." 
+        oninput="renderOrdersTable()" 
+      />
+    </div>
+
+    <!-- TABLE -->
+    <div class="orders-table-wrap">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>رقم الفاتورة</th>
+            <th>النوع</th>
+            <th>التفاصيل / الطاولة / العميل</th>
+            <th>التاريخ والوقت</th>
+            <th>الأصناف والـ Rounds</th>
+            <th>طريقة الدفع</th>
+            <th>الإجمالي</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTbody">
+          <!-- Injected by JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: INVOICE DETAILS -->
+<div class="overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="orderModalTitle">تفاصيل الفاتورة</span>
+      <button class="modal-close" onclick="closeModal('orderModal')">✕</button>
+    </div>
+    <div class="invoice-preview" id="orderModalBody"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn-table-action" onclick="printModalInvoice()">طباعة الفاتورة</button>
+      <button class="btn-table-action" onclick="closeModal('orderModal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('orders.html')) {
+  // redirect
+}
+
+AuthService.renderSidebarUI();
+
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = async () => {
+  await AuthService.logout();
+};
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+let currentFilter = 'all';
+
+window.setFilter = function(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('f-' + filter);
+  if (btn) btn.classList.add('active');
+  renderOrdersTable();
+};
+
+window.renderOrdersTable = function() {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const search = (document.getElementById('searchOrders').value || '').trim().toLowerCase();
+
+  const filtered = orders.filter(o => {
+    const matchFilter = currentFilter === 'all' || o.type === currentFilter;
+    const matchSearch = !search || 
+      String(o.id).includes(search) || 
+      (o.customer || '').toLowerCase().includes(search) ||
+      (o.tableLabel || '').toLowerCase().includes(search);
+    return matchFilter && matchSearch;
+  }).reverse(); // Most recent first
+
+  // Update stats
+  const totalRev = orders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  document.getElementById('statOrdersCount').textContent = orders.length.toLocaleString('ar-EG');
+  document.getElementById('statOrdersTotal').textContent = totalRev.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('statOrdersAvg').textContent = orders.length > 0 ? (totalRev / orders.length).toFixed(1) + ' ج' : '0 ج';
+
+  const tbody = document.getElementById('ordersTbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">لا توجد فواتير مسجلة تطابق التصفية</td></tr>`;
+    return;
+  }
+
+  const typeLabels = { dine:'صالة', take:'تيك أواي', delivery:'ديليفري' };
+  const payLabels = { cash:'كاش', card:'فيزا', transfer:'تحويل', officer:'أوفيسير' };
+
+  tbody.innerHTML = filtered.map(o => {
+    let target = '—';
+    if (o.type === 'dine') target = o.tableLabel || ('طاولة ' + (o.tableNumber || o.tableId || '—'));
+    else if (o.type === 'delivery') target = (o.customer || 'عميل توصيل') + (o.dAddr ? ` (${o.dAddr})` : '');
+    else target = o.customer || 'عميل خارجي';
+
+    const roundsCount = (o.rounds || []).length;
+    const itemsSummary = (o.items || []).map(i => `${i.name} × ${i.qty}`).join(', ');
+
+    return `
+      <tr>
+        <td><strong>#${o.id}</strong></td>
+        <td><span class="badge ${o.type}">${typeLabels[o.type] || o.type}</span></td>
+        <td>${target}</td>
+        <td style="color:var(--text-muted);font-size:12px;">${o.date || ''} ${o.time || ''}</td>
+        <td style="max-width:260px;font-size:12px;">
+          ${roundsCount > 0 ? `<div style="font-weight:700;color:var(--primary);">${roundsCount} Round بالجلسة</div>` : ''}
+          <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${itemsSummary}">${itemsSummary || '—'}</div>
+        </td>
+        <td>${payLabels[o.payMethod] || o.payMethod}</td>
+        <td><strong style="color:var(--primary);">${(o.total || 0).toLocaleString('ar-EG')} ج</strong></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-table-action" onclick="viewOrderDetails('${o.id}')">عرض</button>
+            <button class="btn-table-action danger" onclick="deleteOrder('${o.id}')">حذف</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.viewOrderDetails = function(orderId) {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const o = orders.find(x => String(x.id) === String(orderId));
+  if (!o) return;
+
+  const typeLabels = { dine:'صالة', take:'تيك أواي', delivery:'ديليفري' };
+  const payLabels = { cash:'كاش', card:'فيزا', transfer:'تحويل', officer:'أوفيسير' };
+
+  let roundsDetails = '';
+  if (o.rounds && o.rounds.length > 0) {
+    roundsDetails = `
+      <div style="margin-top:10px;border-top:1px dashed var(--border-strong);padding-top:8px;">
+        <div style="font-weight:800;font-size:13px;margin-bottom:6px;color:var(--primary);">تفاصيل الـ Rounds بالجلسة:</div>
+        ${o.rounds.map(r => `
+          <div style="background:#ffffff;padding:6px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;font-size:12px;">
+            <div style="display:flex;justify-content:space-between;font-weight:700;">
+              <span>Round #${r.roundNumber} (${r.time})</span>
+              <span>${r.subtotal.toLocaleString('ar-EG')} ج</span>
+            </div>
+            <div style="color:var(--text-muted);margin:2px 0;">الويتر: ${r.waiter || '—'}</div>
+            <div>${r.items.map(it => `• ${it.name} × ${it.qty} (${(it.price * it.qty).toLocaleString('ar-EG')} ج)`).join('<br>')}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  document.getElementById('orderModalTitle').textContent = `فاتورة #${o.id} (${typeLabels[o.type] || o.type})`;
+  document.getElementById('orderModalBody').innerHTML = `
+    <div class="inv-row"><span>رقم الفاتورة:</span><span>#${o.id}</span></div>
+    <div class="inv-row"><span>التاريخ والوقت:</span><span>${o.date || ''} ${o.time || ''}</span></div>
+    <div class="inv-row"><span>النوع:</span><span>${typeLabels[o.type] || o.type}</span></div>
+    ${o.tableLabel ? `<div class="inv-row"><span>الطاولة:</span><span>${o.tableLabel}</span></div>` : ''}
+    ${o.customer ? `<div class="inv-row"><span>العميل:</span><span>${o.customer}</span></div>` : ''}
+    ${o.waiter ? `<div class="inv-row"><span>الويتر:</span><span>${o.waiter}</span></div>` : ''}
+    <hr style="border:none;border-top:1px solid var(--border);margin:8px 0;" />
+    <div style="font-weight:700;margin-bottom:4px;">الأصناف المباعة:</div>
+    ${(o.items || []).map(i => `
+      <div class="inv-row">
+        <span>${i.name} × ${i.qty}</span>
+        <span>${((i.price || 0) * (i.qty || 1)).toLocaleString('ar-EG')} ج</span>
+      </div>
+    `).join('')}
+    ${roundsDetails}
+    <hr style="border:none;border-top:1px solid var(--border);margin:8px 0;" />
+    <div class="inv-row"><span>المجموع الفرعي:</span><span>${(o.subtotal || o.total || 0).toLocaleString('ar-EG')} ج</span></div>
+    ${o.discount > 0 ? `<div class="inv-row"><span>الخصم:</span><span>- ${(o.discount).toLocaleString('ar-EG')} ج</span></div>` : ''}
+    <div class="inv-row inv-total"><span>الإجمالي النهائي:</span><span>${(o.total || 0).toLocaleString('ar-EG')} ج</span></div>
+    <div class="inv-row" style="margin-top:6px;"><span>طريقة الدفع:</span><span>${payLabels[o.payMethod] || o.payMethod}</span></div>
+  `;
+
+  openModal('orderModal');
+};
+
+window.printModalInvoice = function() {
+  const content = document.getElementById('orderModalBody').innerHTML;
+  const w = window.open('', '_blank', 'width=380,height=600');
+  w.document.write(`
+    <html dir="rtl">
+    <head>
+      <title>طباعة الفاتورة</title>
+      <style>body{font-family:sans-serif;padding:20px;font-size:13px;}.inv-row{display:flex;justify-content:space-between;padding:3px 0;}.inv-total{font-weight:bold;font-size:15px;}</style>
+    </head>
+    <body>
+      <div style="text-align:center;font-weight:bold;font-size:16px;">CashierSystem</div>
+      <br/>
+      ${content}
+      <br/><button onclick="window.print()">طباعة</button>
+    </body>
+    </html>
+  `);
+  w.document.close();
+};
+
+window.deleteOrder = function(orderId) {
+  const user = AuthService.getSession();
+  if (user && user.role === 'cashier') {
+    showToast('غير مسموح للكاشير بحذف الفواتير. هذه الصلاحية خاصة بالإدارة فقط.');
+    return;
+  }
+
+  let orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const target = orders.find(o => String(o.id) === String(orderId));
+  const val = target ? target.total : 0;
+
+  orders = orders.filter(o => String(o.id) !== String(orderId));
+  localStorage.setItem('cs_orders', JSON.stringify(orders));
+
+  // Log in guard
+  const logs = JSON.parse(localStorage.getItem('cs_guard_logs') || '[]');
+  logs.push({
+    id: Date.now() + Math.random().toString(36).substr(2, 5),
+    timestamp: new Date().toISOString(),
+    user: user ? (user.name || user.username) : 'إدارة',
+    role: user ? user.role : 'مدير',
+    action: 'حذف فاتورة',
+    details: `تم حذف الفاتورة #${orderId} نهائياً بقيمة ${val} ج`,
+    value: val
+  });
+  localStorage.setItem('cs_guard_logs', JSON.stringify(logs));
+
+  showToast(`تم حذف الفاتورة #${orderId} بنجاح`);
+  renderOrdersTable();
+};
+
+// Initial run
+renderOrdersTable();
+</script>
+
+</body>
+</html>

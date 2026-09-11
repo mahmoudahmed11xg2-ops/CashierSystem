@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — إدارة الصالة والطاولات</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sidebar-logo .brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px;
+  margin: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #334155;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px;
+  color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px;
+  border-radius: var(--radius);
+  display: inline-block;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: .5px;
+  padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: right;
+  font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%;
+  padding: 9px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  color: var(--red);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--surface2);
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.content { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+/* CONTROLS BAR */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+.filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+.filter-btn:hover { background: #e2e8f0; color: var(--text); }
+.filter-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.btn-primary {
+  padding: 8px 16px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
+  padding: 8px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+.btn-secondary:hover { background: #e2e8f0; }
+
+.btn-danger {
+  padding: 8px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+  cursor: pointer;
+}
+.btn-danger:hover { background: #fee2e2; }
+
+/* STATS SUMMARY */
+.status-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 700;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-badge {
+  width: 10px; height: 10px; border-radius: 2px;
+}
+.legend-badge.available { background: var(--green); }
+.legend-badge.occupied  { background: var(--red); }
+.legend-badge.reserved  { background: var(--primary); }
+.legend-badge.cleaning  { background: var(--orange); }
+
+/* TABLES GRID */
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.table-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 180px;
+}
+.table-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.table-card.available { border-top: 4px solid var(--green); }
+.table-card.occupied  { border-top: 4px solid var(--red); background: #fffdfd; }
+.table-card.reserved  { border-top: 4px solid var(--primary); background: #fafcff; }
+.table-card.cleaning  { border-top: 4px solid var(--orange); background: #fffcf8; }
+
+.t-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.t-number { font-size: 16px; font-weight: 800; color: var(--text); }
+.t-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+}
+.t-badge.available { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.t-badge.occupied  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.t-badge.reserved  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.t-badge.cleaning  { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+
+.t-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+
+.t-session-body {
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+  font-size: 12px;
+}
+.t-total-val { font-size: 18px; font-weight: 800; color: var(--primary); }
+
+/* MODALS */
+.overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 540px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: #ffffff;
+  outline: none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--primary);
+}
+
+.rounds-list {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  background: var(--surface2);
+  margin-top: 8px;
+}
+.round-item {
+  border-bottom: 1px solid var(--border);
+  padding: 8px 4px;
+  font-size: 12px;
+}
+.round-item:last-child { border-bottom: none; }
+
+.btn-action-small {
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface2);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: inherit;
+  color: var(--text);
+}
+.btn-action-small:hover { background: #e2e8f0; }
+.btn-action-small.primary {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.btn-action-small.primary:hover { background: var(--primary-hover); }
+.btn-action-small.danger {
+  background: #fef2f2;
+  color: var(--red);
+  border-color: #fecaca;
+}
+.btn-action-small.danger:hover { background: #fee2e2; }
+.btn-action-small.success {
+  background: #f0fdf4;
+  color: var(--green);
+  border-color: #bbf7d0;
+}
+.btn-action-small.success:hover { background: #dcfce7; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.25);
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 99999;
+  pointer-events: none;
+}
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item active" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <span class="topbar-title">تنظيم الصالة وجلسات الطاولات</span>
+    <div class="topbar-right">
+      <div class="topbar-date" id="topbarDate">—</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- CONTROLS & FILTER BAR -->
+    <div class="controls-bar">
+      <div class="filter-group">
+        <button class="filter-btn active" id="filter-all" onclick="filterTables('all')">جميع الطاولات</button>
+        <button class="filter-btn" id="filter-available" onclick="filterTables('available')">متاحة (Available)</button>
+        <button class="filter-btn" id="filter-occupied" onclick="filterTables('occupied')">مشغولة (Occupied)</button>
+        <button class="filter-btn" id="filter-reserved" onclick="filterTables('reserved')">محجوزة (Reserved)</button>
+        <button class="filter-btn" id="filter-cleaning" onclick="filterTables('cleaning')">قيد التنظيف (Cleaning)</button>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn-primary" onclick="openAddTableModal()">إضافة طاولة جديدة</button>
+      </div>
+    </div>
+
+    <!-- STATUS LEGEND -->
+    <div class="status-legend">
+      <div class="legend-item">
+        <span class="legend-badge available"></span>
+        <span>متاحة: جاهزة لاستقبال العملاء</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-badge occupied"></span>
+        <span>مشغولة: عليها جلسة نشطة وطلبات</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-badge reserved"></span>
+        <span>محجوزة: موعد مسبق ببيانات العميل</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-badge cleaning"></span>
+        <span>قيد التنظيف: بعد مغادرة العميل للتعقيم</span>
+      </div>
+    </div>
+
+    <!-- TABLES GRID -->
+    <div class="tables-grid" id="tablesGrid">
+      <!-- Injected by JavaScript -->
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: TABLE DETAILS & ACTIONS -->
+<div class="overlay" id="tableDetailsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTableTitle">طاولة</span>
+      <button class="modal-close" onclick="closeModal('tableDetailsModal')">✕</button>
+    </div>
+
+    <div id="modalTableBody">
+      <!-- Injected according to table status -->
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD NEW TABLE -->
+<div class="overlay" id="addTableModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">إضافة طاولة جديدة للصالة</span>
+      <button class="modal-close" onclick="closeModal('addTableModal')">✕</button>
+    </div>
+
+    <form onsubmit="handleSaveNewTable(event)">
+      <div class="form-group">
+        <label for="newTableNumber">رقم / مسمى الطاولة *</label>
+        <input type="text" id="newTableNumber" placeholder="مثال: 15 أو VIP 3" required />
+      </div>
+
+      <div class="form-group">
+        <label for="newTableZone">المنطقة / الصالة *</label>
+        <select id="newTableZone">
+          <option value="صالة العوائل">صالة العوائل الرئيسية</option>
+          <option value="الكابينة الفاخرة">كابينة خاصة VIP</option>
+          <option value="التراس الخارجي">التراس الخارجي (Outdoor)</option>
+          <option value="القسم الداخلي">القسم الداخلي للشباب</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="newTableSeats">السعة / عدد المقاعد *</label>
+        <input type="text" id="newTableSeats" placeholder="مثال: 4 مقاعد" required />
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('addTableModal')">إلغاء</button>
+        <button type="submit" class="btn-primary">حفظ وإضافة الطاولة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: RESERVE TABLE FORM -->
+<div class="overlay" id="reserveTableModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="reserveModalTitle">حجز طاولة</span>
+      <button class="modal-close" onclick="closeModal('reserveTableModal')">✕</button>
+    </div>
+
+    <form onsubmit="handleSaveReservation(event)">
+      <input type="hidden" id="reserveTableId" />
+
+      <div class="form-group">
+        <label for="resCustomerName">اسم العميل *</label>
+        <input type="text" id="resCustomerName" placeholder="مثال: م. أحمد عبد العزيز" required />
+      </div>
+
+      <div class="form-group">
+        <label for="resCustomerPhone">رقم هاتف العميل *</label>
+        <input type="tel" id="resCustomerPhone" placeholder="مثال: 01012345678" required />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label for="resDate">تاريخ الحجز *</label>
+          <input type="date" id="resDate" required />
+        </div>
+        <div class="form-group">
+          <label for="resTime">وقت الحضور *</label>
+          <input type="time" id="resTime" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="resGuests">عدد الأفراد / الضيوف *</label>
+        <input type="number" id="resGuests" min="1" max="50" value="4" required />
+      </div>
+
+      <div class="form-group">
+        <label for="resNotes">ملاحظات وطلبات خاصة</label>
+        <input type="text" id="resNotes" placeholder="مثال: طاولة هادئة جانبية، تجهيز كراسي أطفال" />
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('reserveTableModal')">إلغاء</button>
+        <button type="submit" class="btn-primary">تثبيت الحجز للطاولة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: TRANSFER TABLE (نقل الجلسة لطاولة أخرى) -->
+<div class="overlay" id="transferTableModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="transferModalTitle">نقل الجلسة لطاولة أخرى</span>
+      <button class="modal-close" onclick="closeModal('transferTableModal')">✕</button>
+    </div>
+
+    <form onsubmit="handleConfirmTransferTable(event)">
+      <input type="hidden" id="transferFromTableId" />
+
+      <div style="background:var(--surface2);padding:14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;font-size:13px;">
+        <div id="transferSourceDetails" style="font-weight:700;margin-bottom:6px;color:var(--text);">الطاولة الحالية: —</div>
+        <div style="color:var(--text-muted);line-height:1.5;">سيتم نقل جميع الطلبات والروندات المسجلة والحساب إلى الطاولة الجديدة، وتعيين الطاولة الحالية كـ "قيد التنظيف".</div>
+      </div>
+
+      <div class="form-group">
+        <label for="transferToTableSelect">اختر الطاولة البديلة للتحويل إليها *</label>
+        <select id="transferToTableSelect" required style="font-size:14px;padding:10px;width:100%;">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('transferTableModal')">إلغاء</button>
+        <button type="submit" class="btn-primary" style="background:#2563eb;font-weight:700;">تأكيد نقل الجلسة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService, { TableManager, TABLE_STATUS, TABLE_STATUS_LABELS } from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('tables.html')) {
+  // Redirect handled
+}
+
+AuthService.renderSidebarUI();
+
+// Globals
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = async () => {
+  await AuthService.logout();
+};
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+// Date
+document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+let currentFilter = 'all';
+
+window.filterTables = function(status) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('filter-' + status);
+  if (btn) btn.classList.add('active');
+  renderTablesGrid();
+};
+
+// Toast notification
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function renderTablesGrid() {
+  const tables = TableManager.getTables();
+  const grid = document.getElementById('tablesGrid');
+
+  const filtered = tables.filter(t => {
+    if (currentFilter === 'all') return true;
+    return t.status === currentFilter;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);font-weight:700;">لا توجد طاولات تطابق التصفية الحالية</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map(t => {
+    const st = t.status || 'available';
+    const statusLabel = TABLE_STATUS_LABELS[st] || st;
+
+    let bodyInfo = '';
+    let quickActions = '';
+
+    if (st === TABLE_STATUS.OCCUPIED) {
+      const sess = t.currentSession || {};
+      const roundsCount = (sess.rounds || []).length;
+      const totalAmount = (t.total || 0).toLocaleString('ar-EG') + ' ج';
+      bodyInfo = `
+        <div class="t-session-body">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-weight:700;">العميل: ${sess.customerName || 'عميل صالة'}</span>
+            <span class="t-total-val">${totalAmount}</span>
+          </div>
+          <div style="color:var(--text-muted);font-size:11px;">
+            الويتر: ${sess.waiter || t.waiter || '—'} | ${roundsCount} Round طلبات
+          </div>
+        </div>
+      `;
+      quickActions = `
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;" onclick="event.stopPropagation();">
+          <button class="btn-action-small primary" style="padding:6px 4px;font-size:11px;" onclick="event.stopPropagation(); openTransferTableModal('${t.id}')">⇄ نقل الطاولة</button>
+          <button class="btn-action-small danger" style="padding:6px 4px;font-size:11px;" onclick="event.stopPropagation(); forceFreeTable('${t.id}', 'cleaning')">إخلاء وتنظيف</button>
+        </div>
+      `;
+    } else if (st === TABLE_STATUS.RESERVED) {
+      const res = t.reservation || {};
+      bodyInfo = `
+        <div class="t-session-body">
+          <div style="font-weight:700;color:var(--primary);margin-bottom:2px;">
+            حجز: ${res.customerName || 'عميل محجوز'}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            الوقت: ${res.time || '—'} (${res.guestsCount || 4} أفراد)
+          </div>
+          ${res.notes ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px;">ملاحظة: ${res.notes}</div>` : ''}
+        </div>
+      `;
+      quickActions = `
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;" onclick="event.stopPropagation();">
+          <button class="btn-action-small success" style="padding:6px 4px;font-size:11px;" onclick="event.stopPropagation(); checkInCustomerReservation('${t.id}')">حضور العميل</button>
+          <button class="btn-action-small danger" style="padding:6px 4px;font-size:11px;" onclick="event.stopPropagation(); cancelReservation('${t.id}')">إلغاء الحجز</button>
+        </div>
+      `;
+    } else if (st === TABLE_STATUS.CLEANING) {
+      bodyInfo = `
+        <div class="t-session-body" style="color:var(--orange);font-weight:600;">
+          الطاولة بانتظار إتمام التعقيم والتنظيف
+        </div>
+      `;
+      quickActions = `
+        <div style="margin-top:10px;" onclick="event.stopPropagation();">
+          <button class="btn-action-small success" style="width:100%;padding:7px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="event.stopPropagation(); markTableAsCleaned('${t.id}')">
+            <span>✓</span> تم التنظيف — إتاحة الطاولة
+          </button>
+        </div>
+      `;
+    } else {
+      bodyInfo = `
+        <div class="t-session-body" style="color:var(--green);font-weight:600;">
+          جاهزة للاستقبال الفوري
+        </div>
+      `;
+      quickActions = `
+        <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;" onclick="event.stopPropagation();">
+          <button class="btn-action-small primary" style="padding:6px 4px;font-size:11px;" onclick="event.stopPropagation(); startNewSessionDirectly('${t.id}')">بدء جلسة</button>
+          <button class="btn-action-small" style="padding:6px 4px;font-size:11px;" onclick="event.stopPropagation(); setTableCleaningStatus('${t.id}')">قيد التنظيف</button>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="table-card ${st}" onclick="openTableDetailsModal('${t.id}')">
+        <div>
+          <div class="t-header">
+            <span class="t-number">طاولة ${t.number}</span>
+            <span class="t-badge ${st}">${statusLabel}</span>
+          </div>
+          <div class="t-meta">${t.zone} (${t.seats})</div>
+        </div>
+        ${bodyInfo}
+        ${quickActions}
+      </div>
+    `;
+  }).join('');
+}
+
+// -------------------------------------------------------------
+// Table Details & Lifecycle Actions Modal
+// -------------------------------------------------------------
+window.openTableDetailsModal = function(tableId) {
+  const t = TableManager.getTable(tableId);
+  if (!t) return;
+
+  document.getElementById('modalTableTitle').textContent = `طاولة ${t.number} — ${t.zone} (${TABLE_STATUS_LABELS[t.status] || t.status})`;
+  const bodyEl = document.getElementById('modalTableBody');
+
+  if (t.status === TABLE_STATUS.AVAILABLE) {
+    bodyEl.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">الطاولة متاحة وجاهزة لبدء جلسة جديدة أو تسجيل حجز مسبق.</div>
+        <div style="background:var(--surface2);padding:12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <div><strong>المنطقة:</strong> ${t.zone}</div>
+          <div><strong>السعة:</strong> ${t.seats}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-primary" style="padding:12px;font-size:14px;" onclick="startNewSessionDirectly('${t.id}')">
+          بدء جلسة وفتح طلب بالكاشير (POS)
+        </button>
+        <button class="btn-secondary" style="padding:10px;" onclick="openReservationModal('${t.id}')">
+          تسجيل حجز مسبق لهذه الطاولة
+        </button>
+        <button class="btn-secondary" style="padding:10px;" onclick="setTableCleaningStatus('${t.id}')">
+          تعيين كـ "قيد التنظيف والتعقيم"
+        </button>
+      </div>
+    `;
+  } else if (t.status === TABLE_STATUS.RESERVED) {
+    const res = t.reservation || {};
+    bodyEl.innerHTML = `
+      <div style="margin-bottom:18px;">
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:var(--radius);padding:14px;font-size:13px;color:#1e293b;">
+          <div style="font-weight:800;font-size:15px;margin-bottom:6px;color:#1d4ed8;">تفاصيل الحجز المسجل:</div>
+          <div><strong>اسم العميل:</strong> ${res.customerName || '—'}</div>
+          <div><strong>رقم الهاتف:</strong> ${res.customerPhone || '—'}</div>
+          <div><strong>التاريخ والوقت:</strong> ${res.date || 'اليوم'} في تمام ${res.time || '—'}</div>
+          <div><strong>عدد الضيوف:</strong> ${res.guestsCount || 4} أفراد</div>
+          ${res.notes ? `<div style="margin-top:4px;"><strong>ملاحظات:</strong> ${res.notes}</div>` : ''}
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-primary" style="padding:12px;" onclick="checkInCustomerReservation('${t.id}')">
+          حضور العميل وفتح الجلسة والطلب (Check-in)
+        </button>
+        <button class="btn-danger" style="padding:10px;" onclick="cancelReservation('${t.id}')">
+          إلغاء هذا الحجز وإتاحة الطاولة
+        </button>
+      </div>
+    `;
+  } else if (t.status === TABLE_STATUS.OCCUPIED) {
+    const sess = t.currentSession || {};
+    const rounds = sess.rounds || [];
+    const totalAmount = (t.total || 0).toLocaleString('ar-EG') + ' ج';
+
+    const roundsHtml = rounds.map(r => `
+      <div class="round-item">
+        <div style="display:flex;justify-content:space-between;font-weight:700;">
+          <span>الطلب (Round #${r.roundNumber}) - الساعة: ${r.time}</span>
+          <span style="color:var(--primary);">${(r.subtotal||0).toLocaleString('ar-EG')} ج</span>
+        </div>
+        <div style="color:var(--text-muted);margin-top:2px;">الويتر: ${r.waiter || '—'}</div>
+        <div style="margin-top:4px;">
+          ${r.items.map(it => `• ${it.name} × ${it.qty} (${(it.price*it.qty).toLocaleString('ar-EG')} ج)`).join('<br>')}
+        </div>
+      </div>
+    `).join('');
+
+    bodyEl.innerHTML = `
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);padding:12px;border:1px solid var(--border);border-radius:var(--radius);">
+          <div>
+            <div style="font-weight:800;font-size:14px;">العميل: ${sess.customerName || 'عميل صالة'}</div>
+            <div style="font-size:12px;color:var(--text-muted);">الويتر: ${sess.waiter || '—'} | وقت الفتح: ${new Date(sess.openedAt).toLocaleTimeString('ar-EG', {hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:11px;color:var(--text-muted);">إجمالي الجلسة الحالي</div>
+            <div class="t-total-val">${totalAmount}</div>
+          </div>
+        </div>
+
+        <div style="font-weight:700;font-size:13px;margin-top:12px;">تاريخ الطلبات المرتبطة بهذه الجلسة (${rounds.length} Round):</div>
+        <div class="rounds-list">
+          ${roundsHtml || '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:10px;">لم يتم تسجيل أصناف بعد</div>'}
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-primary" style="padding:11px;" onclick="addNextRoundInPOS('${t.id}')">
+          إضافة طلب جديد للجلسة (Round جديد بالكاشير)
+        </button>
+        <button class="btn-secondary" style="padding:11px;font-weight:800;" onclick="settleAndCheckoutTableInPOS('${t.id}')">
+          طلب الحساب والفاتورة (الدفع وإغلاق الجلسة)
+        </button>
+        <button class="btn-secondary" style="padding:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;" onclick="openTransferTableModal('${t.id}')">
+          ⇄ نقل الجلسة لطاولة أخرى (نقل الطاولة)
+        </button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px;">
+          <button class="btn-danger" style="padding:10px;font-size:12px;" onclick="forceFreeTable('${t.id}', 'cleaning')">
+            إخلاء ونقل للتنظيف
+          </button>
+          <button class="btn-secondary" style="padding:10px;font-size:12px;border:1px solid var(--border-strong);" onclick="forceFreeTable('${t.id}', 'available')">
+            إخلاء فوري وإتاحة الطاولة
+          </button>
+        </div>
+      </div>
+    `;
+  } else if (t.status === TABLE_STATUS.CLEANING) {
+    bodyEl.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:var(--radius);padding:14px;color:#b45309;font-weight:700;">
+          الطاولة تحت إجراءات التعقيم والتنظيف بعد انتهاء الجلسة السابقة.
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-primary" style="padding:12px;background:#16a34a;" onclick="markTableAsCleaned('${t.id}')">
+          تم التنظيف ✓ — جعل الطاولة متاحة الآن للاستقبال
+        </button>
+      </div>
+    `;
+  }
+
+  openModal('tableDetailsModal');
+};
+
+// Start session
+window.startNewSessionDirectly = function(tableId) {
+  TableManager.openSession(tableId, 'عميل صالة', 'وليد صبحي صالة');
+  closeModal('tableDetailsModal');
+  showToast('تم بدء الجلسة بنجاح، جاري التحويل للكاشير...');
+  setTimeout(() => {
+    window.location.href = `pos.html?tableId=${tableId}`;
+  }, 300);
+};
+
+// Check in reservation
+window.checkInCustomerReservation = function(tableId) {
+  TableManager.checkInReservation(tableId, 'وليد صبحي صالة');
+  closeModal('tableDetailsModal');
+  showToast('تم تسجيل حضور العميل وبدء الجلسة');
+  setTimeout(() => {
+    window.location.href = `pos.html?tableId=${tableId}`;
+  }, 300);
+};
+
+// Cancel reservation
+window.cancelReservation = function(tableId) {
+  TableManager.setAvailable(tableId);
+  closeModal('tableDetailsModal');
+  renderTablesGrid();
+  showToast('تم إلغاء الحجز وإعادة الطاولة كمتاحة');
+};
+
+// Next round in POS
+window.addNextRoundInPOS = function(tableId) {
+  closeModal('tableDetailsModal');
+  window.location.href = `pos.html?tableId=${tableId}`;
+};
+
+// Settle checkout in POS
+window.settleAndCheckoutTableInPOS = function(tableId) {
+  closeModal('tableDetailsModal');
+  window.location.href = `pos.html?tableId=${tableId}&action=checkout`;
+};
+
+// Transfer Table Modal & Handler
+window.openTransferTableModal = function(tableId) {
+  const t = TableManager.getTable(tableId);
+  if (!t) return;
+  const allTables = TableManager.getTables();
+  const availableTargets = allTables.filter(x => String(x.id) !== String(tableId) && x.status === TABLE_STATUS.AVAILABLE);
+
+  const select = document.getElementById('transferToTableSelect');
+  if (availableTargets.length === 0) {
+    select.innerHTML = '<option value="" disabled selected>لا توجد طاولات شاغرة ومتاحة حالياً لنقل الجلسة إليها</option>';
+  } else {
+    select.innerHTML = availableTargets.map(tgt => 
+      `<option value="${tgt.id}">طاولة ${tgt.number} — ${tgt.zone} (${tgt.seats})</option>`
+    ).join('');
+  }
+
+  document.getElementById('transferFromTableId').value = tableId;
+  document.getElementById('transferSourceDetails').textContent = `الطاولة الحالية: طاولة ${t.number} (${t.zone}) — إجمالي الطلبات: ${(t.total||0).toLocaleString('ar-EG')} ج`;
+  
+  closeModal('tableDetailsModal');
+  openModal('transferTableModal');
+};
+
+window.handleConfirmTransferTable = function(e) {
+  e.preventDefault();
+  const fromId = document.getElementById('transferFromTableId').value;
+  const toId = document.getElementById('transferToTableSelect').value;
+  if (!toId) {
+    showToast('يرجى اختيار الطاولة البديلة للتحويل إليها');
+    return;
+  }
+
+  try {
+    const res = TableManager.transferTable(fromId, toId);
+    closeModal('transferTableModal');
+    renderTablesGrid();
+    showToast(`تم نقل الجلسة بنجاح إلى طاولة ${res.to.number} وإخلاء طاولة ${res.from.number} للتنظيف`);
+  } catch (err) {
+    showToast('فشل نقل الطاولة: ' + err.message);
+  }
+};
+
+// Force cleaning / Freeing table
+window.forceFreeTable = function(tableId, targetStatus = 'cleaning') {
+  if (targetStatus === 'available') {
+    TableManager.setAvailable(tableId);
+    showToast('تم إخلاء الطاولة وتعيينها جاهزة للاستقبال الفوري');
+  } else {
+    TableManager.setCleaning(tableId);
+    showToast('تم إخلاء الطاولة وتعيينها قيد التنظيف والتعقيم');
+  }
+  closeModal('tableDetailsModal');
+  renderTablesGrid();
+};
+
+// Mark cleaned
+window.markTableAsCleaned = function(tableId) {
+  TableManager.setAvailable(tableId);
+  closeModal('tableDetailsModal');
+  renderTablesGrid();
+  showToast('تم إتمام التنظيف — الطاولة متاحة الآن للاستقبال الفوري');
+};
+
+window.setTableCleaningStatus = function(tableId) {
+  TableManager.setCleaning(tableId);
+  closeModal('tableDetailsModal');
+  renderTablesGrid();
+  showToast('تم تحويل الطاولة إلى قيد التنظيف والتعقيم');
+};
+
+// Reservation Modal
+window.openReservationModal = function(tableId) {
+  document.getElementById('reserveTableId').value = tableId;
+  const t = TableManager.getTable(tableId);
+  document.getElementById('reserveModalTitle').textContent = `حجز طاولة ${t ? t.number : ''}`;
+  document.getElementById('resDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('resTime').value = '20:00';
+  document.getElementById('resCustomerName').value = '';
+  document.getElementById('resCustomerPhone').value = '';
+  document.getElementById('resNotes').value = '';
+  closeModal('tableDetailsModal');
+  openModal('reserveTableModal');
+};
+
+window.handleSaveReservation = function(e) {
+  e.preventDefault();
+  const tableId = document.getElementById('reserveTableId').value;
+  const customerName = document.getElementById('resCustomerName').value.trim();
+  const customerPhone = document.getElementById('resCustomerPhone').value.trim();
+  const date = document.getElementById('resDate').value;
+  const time = document.getElementById('resTime').value;
+  const guestsCount = document.getElementById('resGuests').value;
+  const notes = document.getElementById('resNotes').value.trim();
+
+  try {
+    TableManager.reserveTable(tableId, { customerName, customerPhone, date, time, guestsCount, notes });
+    closeModal('reserveTableModal');
+    renderTablesGrid();
+    alert('تم تسجيل حجز الطاولة بنجاح!');
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+// Add Table Modal
+window.openAddTableModal = function() {
+  document.getElementById('newTableNumber').value = '';
+  document.getElementById('newTableSeats').value = '4 مقاعد';
+  openModal('addTableModal');
+};
+
+window.handleSaveNewTable = function(e) {
+  e.preventDefault();
+  const num = document.getElementById('newTableNumber').value.trim();
+  const zone = document.getElementById('newTableZone').value;
+  const seats = document.getElementById('newTableSeats').value.trim();
+
+  const tables = TableManager.getTables();
+  const newId = tables.length > 0 ? (Math.max(...tables.map(t => parseInt(t.id)||0)) + 1) : 1;
+
+  tables.push({
+    id: newId,
+    number: num,
+    zone: zone,
+    seats: seats,
+    status: TABLE_STATUS.AVAILABLE,
+    currentSession: null,
+    reservation: null,
+    total: 0,
+    waiter: '—'
+  });
+
+  TableManager.saveTables(tables);
+  closeModal('addTableModal');
+  renderTablesGrid();
+};
+
+// Initial load
+renderTablesGrid();
+</script>
+
+</body>
+</html>

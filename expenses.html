@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — إدارة المصروفات وسندات الصرف</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px; margin: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #e2e8f0; color: #334155; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px; color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px; border-radius: var(--radius);
+  display: inline-block; margin-top: 2px; font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: .5px; padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+  cursor: pointer; transition: background .15s, color .15s;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; background: none;
+  width: 100%; text-align: right; font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%; padding: 9px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--radius); color: var(--red);
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+
+/* CONTROLS */
+.controls-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  padding: 8px 16px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; font-weight: 700; color: #ffffff;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: #ffffff; width: 240px;
+}
+
+/* TABLE */
+.table-wrap {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+table.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: right;
+}
+table.custom-table th {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+table.custom-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+table.custom-table tr:hover td { background: var(--surface2); }
+
+.badge-cat {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.btn-action-small {
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text);
+  cursor: pointer;
+}
+.btn-action-small:hover { background: var(--surface2); }
+.btn-action-small.danger { color: var(--red); border-color: #fecaca; }
+.btn-action-small.danger:hover { background: #fef2f2; }
+
+/* MODALS */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 460px; max-width: 95vw;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close { background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; }
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text); background: #ffffff;
+}
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 700; display: none; z-index: 200;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item active" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">سجل المصروفات النثرية وسندات الصرف</span>
+    <div class="topbar-right">
+      <button class="btn-primary" onclick="openAddExpenseModal()">تسجيل سند صرف جديد</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">إجمالي المصروفات المسجلة</div>
+        <div class="stat-val" style="color:var(--red);" id="statTotalExp">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">عدد سندات الصرف</div>
+        <div class="stat-val" id="statCountExp">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">أعلى تصنيف في الإنفاق</div>
+        <div class="stat-val" style="font-size:16px;" id="statTopCat">—</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+      <input 
+        type="text" 
+        id="searchExp" 
+        class="search-input" 
+        placeholder="بحث في البيان أو المستلم..." 
+        oninput="renderExpensesTable()" 
+      />
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>رقم السند</th>
+            <th>القيمة</th>
+            <th>التصنيف</th>
+            <th>بيان الصرف / السبب</th>
+            <th>المستلم / المستفيد</th>
+            <th>المسؤول (الكاشير)</th>
+            <th>التاريخ والوقت</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="expensesTbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: ADD EXPENSE -->
+<div class="overlay" id="expenseModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">تسجيل سند صرف نقدي جديد</span>
+      <button class="modal-close" onclick="closeModal('expenseModal')">✕</button>
+    </div>
+    <form onsubmit="handleSaveExpense(event)">
+      <div class="form-group">
+        <label>المبلغ المصروف (ج) *</label>
+        <input type="number" id="expAmount" min="1" step="0.5" required placeholder="مثال: 150" />
+      </div>
+
+      <div class="form-group">
+        <label>تصنيف المصروف *</label>
+        <select id="expCategory">
+          <option value="مشتريات طارئة">مشتريات طارئة وخضار</option>
+          <option value="صيانة وتشغيل">صيانة وأدوات تشغيل</option>
+          <option value="فواتير ونثريات">فواتير ومصاريف إدارية ونثريات</option>
+          <option value="رواتب وسلف">سلف ومستحقات عاملين</option>
+          <option value="بنزين ووقود">بنزين وتوصيل</option>
+          <option value="أخرى">أخرى</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>بيان وسبب الصرف بالتفصيل *</label>
+        <textarea id="expReason" rows="2" required placeholder="مثال: شراء أكياس تعبئة وورق حراري للطابعة"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>المستلم / الجهة المستفيدة *</label>
+        <input type="text" id="expRecipient" required placeholder="مثال: محمد عامل الصيانة" />
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn-action-small" onclick="closeModal('expenseModal')">إلغاء</button>
+        <button type="submit" class="btn-primary">ترحيل السند وخصمه من اليومية</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('expenses.html')) {
+  // redirect
+}
+
+AuthService.renderSidebarUI();
+
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = async () => {
+  await AuthService.logout();
+};
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Seed initial expenses if empty
+function seedExpensesIfEmpty() {
+  const raw = localStorage.getItem('cs_expenses');
+  if (!raw || JSON.parse(raw).length === 0) {
+    localStorage.setItem('cs_expenses', JSON.stringify([
+      {
+        id: 101,
+        amount: 120,
+        category: 'مشتريات طارئة',
+        reason: 'شراء أطباق فويل وكرتون تغليف إضافي',
+        recipient: 'عامل التوريدات',
+        cashier: 'أحمد الإداري',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 102,
+        amount: 80,
+        category: 'صيانة وتشغيل',
+        reason: 'تغيير لمبة إضاءة المطبخ ومفتاح كهرباء',
+        recipient: 'فني الصيانة',
+        cashier: 'أحمد الإداري',
+        createdAt: new Date().toISOString()
+      }
+    ]));
+  }
+}
+seedExpensesIfEmpty();
+
+window.renderExpensesTable = function() {
+  const expenses = JSON.parse(localStorage.getItem('cs_expenses') || '[]');
+  const search = (document.getElementById('searchExp').value || '').trim().toLowerCase();
+
+  const filtered = expenses.filter(e => {
+    return !search || 
+      (e.reason || '').toLowerCase().includes(search) ||
+      (e.recipient || '').toLowerCase().includes(search) ||
+      (e.category || '').toLowerCase().includes(search);
+  }).reverse();
+
+  const totalVal = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  document.getElementById('statTotalExp').textContent = totalVal.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('statCountExp').textContent = expenses.length;
+
+  // Find top cat
+  const catSums = {};
+  expenses.forEach(e => {
+    catSums[e.category] = (catSums[e.category] || 0) + (parseFloat(e.amount) || 0);
+  });
+  let topCat = '—';
+  let maxCatVal = 0;
+  for (const cat in catSums) {
+    if (catSums[cat] > maxCatVal) {
+      maxCatVal = catSums[cat];
+      topCat = cat;
+    }
+  }
+  document.getElementById('statTopCat').textContent = topCat;
+
+  const tbody = document.getElementById('expensesTbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">لا توجد مصروفات مسجلة تطابق البحث</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(e => `
+    <tr>
+      <td><strong>#${e.id}</strong></td>
+      <td><strong style="color:var(--red);">${(e.amount || 0).toLocaleString('ar-EG')} ج</strong></td>
+      <td><span class="badge-cat">${e.category || 'عام'}</span></td>
+      <td>${e.reason || '—'}</td>
+      <td>${e.recipient || '—'}</td>
+      <td>${e.cashier || '—'}</td>
+      <td style="font-size:12px;color:var(--text-muted);">
+        ${e.createdAt ? new Date(e.createdAt).toLocaleString('ar-EG') : '—'}
+      </td>
+      <td>
+        <button class="btn-action-small danger" onclick="deleteExpense(${e.id})">حذف</button>
+      </td>
+    </tr>
+  `).join('');
+};
+
+window.openAddExpenseModal = function() {
+  document.getElementById('expAmount').value = '';
+  document.getElementById('expReason').value = '';
+  document.getElementById('expRecipient').value = '';
+  openModal('expenseModal');
+};
+
+window.handleSaveExpense = function(e) {
+  e.preventDefault();
+  const session = AuthService.getSession();
+  const amount = parseFloat(document.getElementById('expAmount').value) || 0;
+  const category = document.getElementById('expCategory').value;
+  const reason = document.getElementById('expReason').value.trim();
+  const recipient = document.getElementById('expRecipient').value.trim();
+
+  if (amount <= 0 || !reason || !recipient) {
+    showToast('يرجى تعبئة كافة الحقول بطريقة صحيحة');
+    return;
+  }
+
+  const expenses = JSON.parse(localStorage.getItem('cs_expenses') || '[]');
+  const newId = expenses.length > 0 ? (Math.max(...expenses.map(x => x.id || 0)) + 1) : 101;
+
+  expenses.push({
+    id: newId,
+    amount,
+    category,
+    reason,
+    recipient,
+    cashier: session ? (session.name || session.username) : 'كاشير',
+    createdAt: new Date().toISOString()
+  });
+
+  localStorage.setItem('cs_expenses', JSON.stringify(expenses));
+  closeModal('expenseModal');
+  showToast('تم تسجيل سند الصرف وخصمه من اليومية بنجاح');
+  renderExpensesTable();
+};
+
+window.deleteExpense = function(id) {
+  const session = AuthService.getSession();
+  if (session && session.role === 'cashier') {
+    showToast('غير مسموح للكاشير بحذف سندات الصرف. هذه الصلاحية للمدير والمحاسب فقط.');
+    return;
+  }
+
+  let expenses = JSON.parse(localStorage.getItem('cs_expenses') || '[]');
+  expenses = expenses.filter(x => x.id !== id);
+  localStorage.setItem('cs_expenses', JSON.stringify(expenses));
+
+  showToast(`تم حذف سند الصرف رقم #${id} بنجاح`);
+  renderExpensesTable();
+};
+
+// Start
+renderExpensesTable();
+</script>
+
+</body>
+</html>

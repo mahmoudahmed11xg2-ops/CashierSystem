@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — الحسابات والوردية المالية</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px; margin: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #e2e8f0; color: #334155; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px; color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px; border-radius: var(--radius);
+  display: inline-block; margin-top: 2px; font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: .5px; padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+  cursor: pointer; transition: background .15s, color .15s;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; background: none;
+  width: 100%; text-align: right; font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%; padding: 9px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--radius); color: var(--red);
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+/* SHIFT STATUS BANNER */
+.shift-status-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.shift-info-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.shift-info-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+
+/* CONTROLS */
+.btn-primary {
+  padding: 8px 16px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; font-weight: 700; color: #ffffff;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-danger {
+  padding: 8px 16px;
+  background: var(--red);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; font-weight: 700; color: #ffffff;
+  cursor: pointer;
+}
+.btn-danger:hover { background: #b91c1c; }
+
+.btn-outline {
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  font-family: inherit; font-size: 13px; font-weight: 700; color: var(--text);
+  cursor: pointer;
+}
+.btn-outline:hover { background: var(--surface2); }
+
+/* TABLE */
+.table-wrap {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+.section-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+
+table.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: right;
+}
+table.custom-table th {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+table.custom-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+table.custom-table tr:hover td { background: var(--surface2); }
+
+/* MODALS */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 440px; max-width: 95vw;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close { background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; }
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.form-group input {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text); background: #ffffff;
+}
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 700; display: none; z-index: 200;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item active" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">الحسابات المالية والوردية اليومية للدرج</span>
+    <div class="topbar-right">
+      <button class="btn-outline" onclick="navigate('expenses.html')">تسجيل مصروف أو عهدة</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ACTIVE SHIFT CARD -->
+    <div class="shift-status-card" id="shiftStatusCard">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">رصيد افتتاح الدرج</div>
+        <div class="stat-val" id="statOpening">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">مبيعات الكاش بالوردية</div>
+        <div class="stat-val" id="statCashSales">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">مبيعات الفيزا والتحويلات</div>
+        <div class="stat-val" id="statNonCashSales">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">المصروفات المسحوبة من الدرج</div>
+        <div class="stat-val" style="color:var(--red);" id="statShiftExpenses">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">النقدية المتوقعة بالدرج حالياً</div>
+        <div class="stat-val" style="color:var(--primary);" id="statExpectedCash">0 ج</div>
+      </div>
+    </div>
+
+    <!-- SHIFT HISTORY TABLE -->
+    <div>
+      <div class="section-title">سجل الورديات السابقة وإقفال الحسابات</div>
+      <div class="table-wrap">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>رقم الوردية</th>
+              <th>المسؤول (الكاشير)</th>
+              <th>وقت الفتح</th>
+              <th>وقت الإغلاق</th>
+              <th>رصيد البداية</th>
+              <th>مبيعات الكاش</th>
+              <th>المتوقع بالدرج</th>
+              <th>الفعلي المستلم</th>
+              <th>الفارق (عجز / زيادة)</th>
+            </tr>
+          </thead>
+          <tbody id="shiftsLogTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: OPEN SHIFT -->
+<div class="overlay" id="openShiftModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">فتح وردية عمل جديدة</span>
+      <button class="modal-close" onclick="closeModal('openShiftModal')">✕</button>
+    </div>
+    <form onsubmit="handleOpenShift(event)">
+      <div class="form-group">
+        <label>اسم الكاشير المستلم للوردية</label>
+        <input type="text" id="openShiftCashierName" readonly />
+      </div>
+      <div class="form-group">
+        <label>رصيد النقدية الافتتاحي في الدرج (الفكة) *</label>
+        <input type="number" id="openingBalanceInput" value="500" step="10" min="0" required />
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn-outline" onclick="closeModal('openShiftModal')">إلغاء</button>
+        <button type="submit" class="btn-primary">تأكيد فتح الوردية</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: CLOSE SHIFT -->
+<div class="overlay" id="closeShiftModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">تقفيل وإنهاء الوردية الحالية</span>
+      <button class="modal-close" onclick="closeModal('closeShiftModal')">✕</button>
+    </div>
+    <form onsubmit="handleCloseShift(event)">
+      <div class="form-group">
+        <label>النقدية المحسوبة حسابياً في الدرج</label>
+        <input type="text" id="expectedDrawerText" readonly style="font-weight:700;color:var(--primary);" />
+      </div>
+      <div class="form-group">
+        <label>النقدية الفعلية بعد جرد الدرج باليد *</label>
+        <input type="number" id="actualDrawerInput" step="1" min="0" required oninput="calcDifference()" />
+      </div>
+      <div class="form-group">
+        <label>الفارق الحسابي</label>
+        <div id="diffText" style="font-size:13px;font-weight:800;padding:6px 0;">—</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn-outline" onclick="closeModal('closeShiftModal')">إلغاء</button>
+        <button type="submit" class="btn-danger">تأكيد إغلاق الوردية وترحيل الحسابات</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('accounts.html')) {
+  // redirect
+}
+
+AuthService.renderSidebarUI();
+
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = async () => {
+  await AuthService.logout();
+};
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+window.renderAccounts = function() {
+  const activeShift = JSON.parse(localStorage.getItem('cs_active_shift') || 'null');
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const expenses = JSON.parse(localStorage.getItem('cs_expenses') || '[]');
+  const session = AuthService.getSession();
+
+  // Banner status
+  const banner = document.getElementById('shiftStatusCard');
+  if (!activeShift) {
+    banner.innerHTML = `
+      <div>
+        <div class="shift-info-title">لا توجد وردية مفتوحة حالياً</div>
+        <div class="shift-info-sub">يجب فتح وردية عمل لتسجيل مبيعات النقدية وإجراء المطابقة المالية للدرج.</div>
+      </div>
+      <div>
+        <button class="btn-primary" onclick="openStartShiftModal()">بدء وردية جديدة</button>
+      </div>
+    `;
+
+    document.getElementById('statOpening').textContent = '—';
+    document.getElementById('statCashSales').textContent = '—';
+    document.getElementById('statNonCashSales').textContent = '—';
+    document.getElementById('statShiftExpenses').textContent = '—';
+    document.getElementById('statExpectedCash').textContent = '—';
+  } else {
+    banner.innerHTML = `
+      <div>
+        <div class="shift-info-title">الوردية الحالية نشطة — المسؤول: ${activeShift.cashierName}</div>
+        <div class="shift-info-sub">بدأت في: ${activeShift.openedAt} | رصيد بداية الدرج: ${activeShift.openingBalance} ج</div>
+      </div>
+      <div>
+        <button class="btn-danger" onclick="openEndShiftModal()">إغلاق وتقفيل الوردية</button>
+      </div>
+    `;
+
+    // Filter by shift start time if available
+    const startTime = new Date(activeShift.openedAtRaw || 0);
+    const shiftOrders = orders.filter(o => {
+      if (!activeShift.openedAtRaw) return true;
+      return new Date(o.createdAt || o.date) >= startTime;
+    });
+    const shiftExpenses = expenses.filter(e => {
+      if (!activeShift.openedAtRaw) return true;
+      return new Date(e.createdAt || e.date) >= startTime;
+    });
+
+    const cashSales = shiftOrders.filter(o => o.payMethod === 'cash').reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+    const nonCashSales = shiftOrders.filter(o => o.payMethod !== 'cash').reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+    const totalExp = shiftExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+    const expectedDrawer = (parseFloat(activeShift.openingBalance) || 0) + cashSales - totalExp;
+
+    document.getElementById('statOpening').textContent = (activeShift.openingBalance || 0).toLocaleString('ar-EG') + ' ج';
+    document.getElementById('statCashSales').textContent = cashSales.toLocaleString('ar-EG') + ' ج';
+    document.getElementById('statNonCashSales').textContent = nonCashSales.toLocaleString('ar-EG') + ' ج';
+    document.getElementById('statShiftExpenses').textContent = totalExp.toLocaleString('ar-EG') + ' ج';
+    document.getElementById('statExpectedCash').textContent = expectedDrawer.toLocaleString('ar-EG') + ' ج';
+  }
+
+  // Render log
+  renderHistoryShifts();
+};
+
+window.renderHistoryShifts = function() {
+  const shiftsLog = JSON.parse(localStorage.getItem('cs_shifts_log') || '[]').reverse();
+  const tbody = document.getElementById('shiftsLogTbody');
+
+  if (shiftsLog.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted);">لا توجد تقفيلات ورديات سابقة مسجلة</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = shiftsLog.map(s => {
+    const diff = s.difference || 0;
+    let diffClass = '';
+    let diffLabel = 'مطابق تماماً';
+    if (diff > 0) {
+      diffClass = 'color:var(--green);font-weight:700;';
+      diffLabel = `+${diff.toLocaleString('ar-EG')} ج (زيادة)`;
+    } else if (diff < 0) {
+      diffClass = 'color:var(--red);font-weight:700;';
+      diffLabel = `${diff.toLocaleString('ar-EG')} ج (عجز)`;
+    }
+
+    return `
+      <tr>
+        <td><strong>#${s.id}</strong></td>
+        <td>${s.cashierName || 'كاشير'}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${s.openedAt || '—'}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${s.closedAt || '—'}</td>
+        <td>${(s.openingBalance || 0).toLocaleString('ar-EG')} ج</td>
+        <td>${(s.cashSales || 0).toLocaleString('ar-EG')} ج</td>
+        <td>${(s.expectedTotal || 0).toLocaleString('ar-EG')} ج</td>
+        <td><strong>${(s.actualDrawer || 0).toLocaleString('ar-EG')} ج</strong></td>
+        <td style="${diffClass}">${diffLabel}</td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.openStartShiftModal = function() {
+  const s = AuthService.getSession();
+  document.getElementById('openShiftCashierName').value = s ? (s.name || s.username) : 'كاشير رئيسي';
+  document.getElementById('openingBalanceInput').value = '500';
+  openModal('openShiftModal');
+};
+
+window.handleOpenShift = function(e) {
+  e.preventDefault();
+  const s = AuthService.getSession();
+  const opening = parseFloat(document.getElementById('openingBalanceInput').value) || 0;
+
+  const newShift = {
+    cashierName: s ? (s.name || s.username) : 'كاشير',
+    openingBalance: opening,
+    openedAt: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString('ar-EG'),
+    openedAtRaw: new Date().toISOString()
+  };
+
+  localStorage.setItem('cs_active_shift', JSON.stringify(newShift));
+  closeModal('openShiftModal');
+  showToast('تم فتح وردية العمل بنجاح');
+  renderAccounts();
+};
+
+window.openEndShiftModal = function() {
+  const activeShift = JSON.parse(localStorage.getItem('cs_active_shift') || 'null');
+  if (!activeShift) return;
+
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const expenses = JSON.parse(localStorage.getItem('cs_expenses') || '[]');
+
+  const startTime = new Date(activeShift.openedAtRaw || 0);
+  const shiftOrders = orders.filter(o => !activeShift.openedAtRaw || new Date(o.createdAt || o.date) >= startTime);
+  const shiftExpenses = expenses.filter(e => !activeShift.openedAtRaw || new Date(e.createdAt || e.date) >= startTime);
+
+  const cashSales = shiftOrders.filter(o => o.payMethod === 'cash').reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  const totalExp = shiftExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  const expectedDrawer = (parseFloat(activeShift.openingBalance) || 0) + cashSales - totalExp;
+
+  document.getElementById('expectedDrawerText').value = expectedDrawer.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('actualDrawerInput').value = expectedDrawer;
+  calcDifference();
+  openModal('closeShiftModal');
+};
+
+window.calcDifference = function() {
+  const expStr = document.getElementById('expectedDrawerText').value.replace(/[^0-9.-]/g, '');
+  const exp = parseFloat(expStr) || 0;
+  const act = parseFloat(document.getElementById('actualDrawerInput').value) || 0;
+  const diff = act - exp;
+
+  const el = document.getElementById('diffText');
+  if (diff === 0) {
+    el.textContent = 'الدرج متطابق تماماً بدون أي عجز أو زيادة';
+    el.style.color = 'var(--green)';
+  } else if (diff < 0) {
+    el.textContent = `يوجد عجز نقدي في الدرج بقيمة: ${diff.toLocaleString('ar-EG')} ج`;
+    el.style.color = 'var(--red)';
+  } else {
+    el.textContent = `يوجد زيادة نقدية في الدرج بقيمة: +${diff.toLocaleString('ar-EG')} ج`;
+    el.style.color = 'var(--primary)';
+  }
+};
+
+window.handleCloseShift = function(e) {
+  e.preventDefault();
+  const activeShift = JSON.parse(localStorage.getItem('cs_active_shift') || 'null');
+  if (!activeShift) return;
+
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const expenses = JSON.parse(localStorage.getItem('cs_expenses') || '[]');
+
+  const startTime = new Date(activeShift.openedAtRaw || 0);
+  const shiftOrders = orders.filter(o => !activeShift.openedAtRaw || new Date(o.createdAt || o.date) >= startTime);
+  const shiftExpenses = expenses.filter(e => !activeShift.openedAtRaw || new Date(e.createdAt || e.date) >= startTime);
+
+  const cashSales = shiftOrders.filter(o => o.payMethod === 'cash').reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+  const totalExp = shiftExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+  const expectedDrawer = (parseFloat(activeShift.openingBalance) || 0) + cashSales - totalExp;
+  const actualDrawer = parseFloat(document.getElementById('actualDrawerInput').value) || 0;
+  const diff = actualDrawer - expectedDrawer;
+
+  const log = JSON.parse(localStorage.getItem('cs_shifts_log') || '[]');
+  const closedRecord = {
+    id: log.length + 1,
+    openedAt: activeShift.openedAt,
+    closedAt: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString('ar-EG'),
+    openingBalance: activeShift.openingBalance,
+    cashSales: cashSales,
+    expectedTotal: expectedDrawer,
+    actualDrawer: actualDrawer,
+    difference: diff,
+    cashierName: activeShift.cashierName
+  };
+
+  log.push(closedRecord);
+  localStorage.setItem('cs_shifts_log', JSON.stringify(log));
+  localStorage.removeItem('cs_active_shift');
+
+  closeModal('closeShiftModal');
+  showToast('تم تقفيل الوردية وترحيل الحسابات بنجاح');
+  renderAccounts();
+};
+
+// Start
+renderAccounts();
+</script>
+
+</body>
+</html>

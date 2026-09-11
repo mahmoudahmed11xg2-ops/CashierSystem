@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير والمبيعات المتكامل</title>
+<meta name="description" content="نظام سحابي متكامل لإدارة الكاشير والطلبيات، تنظيم الطاولات، خدمات التوصيل والمطاعم، تتبع المخازن والمصروفات، وإدارة الورديات والموظفين وصلاحيات المستخدمين بدقة.">
+<meta property="og:title" content="نظام الكاشير والمبيعات المتكامل">
+<meta property="og:description" content="نظام سحابي متكامل لإدارة الكاشير والطلبيات، تنظيم الطاولات، خدمات التوصيل والمطاعم، تتبع المخازن والمصروفات، وإدارة الورديات والموظفين وصلاحيات المستخدمين بدقة.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg:        #f5f7fa;
+    --surface:   #ffffff;
+    --surface2:  #f8fafc;
+    --border:    #e2e8f0;
+    --border-strong: #cbd5e1;
+    --primary:   #1c69d4;
+    --primary-hover: #1555ab;
+    --green:     #16a34a;
+    --red:       #dc2626;
+    --text:      #1e293b;
+    --text-muted:#64748b;
+    --radius:    6px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Cairo', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 44px 38px;
+    width: 440px;
+    max-width: 100%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  }
+
+  .brand-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 14px;
+    letter-spacing: -1px;
+  }
+  .brand-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .brand-title span {
+    color: var(--primary);
+  }
+  .brand-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .input-wrap {
+    position: relative;
+  }
+  input {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    direction: rtl;
+  }
+  input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(28, 105, 212, 0.1);
+  }
+  input::placeholder {
+    color: #94a3b8;
+    font-size: 13px;
+  }
+
+  .toggle-pwd {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+  .toggle-pwd:hover {
+    color: var(--text);
+    background: #f1f5f9;
+  }
+
+  .btn-submit {
+    width: 100%;
+    padding: 13px;
+    background: var(--primary);
+    border: none;
+    border-radius: var(--radius);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .btn-submit:hover {
+    background: var(--primary-hover);
+  }
+  .btn-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  .error-box {
+    display: none;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--red);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 14px;
+    border-radius: var(--radius);
+    margin-top: 16px;
+    text-align: center;
+  }
+  .error-box.show {
+    display: block;
+  }
+
+  .footer-meta {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Spinner */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="brand-header">
+    <div class="brand-badge">CS</div>
+    <h1 class="brand-title">Cashier <span>System</span></h1>
+    <p class="brand-desc">نظام المبيعات وإدارة العمليات المؤسسي</p>
+  </div>
+
+  <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+    <div class="form-group">
+      <label for="usernameInput">اسم المستخدم أو البريد الإلكتروني</label>
+      <div class="input-wrap">
+        <input 
+          type="text" 
+          id="usernameInput" 
+          placeholder="أدخل اسم المستخدم أو البريد" 
+          autocomplete="username" 
+          required 
+          autofocus
+        />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="passwordInput">كلمة المرور</label>
+      <div class="input-wrap">
+        <input 
+          type="password" 
+          id="passwordInput" 
+          placeholder="أدخل كلمة المرور" 
+          autocomplete="current-password" 
+          required 
+        />
+        <button type="button" class="toggle-pwd" id="togglePwdBtn" onclick="togglePasswordVisibility()">إظهار</button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">
+      <span id="btnText">تسجيل الدخول</span>
+      <span id="btnSpinner" class="spinner" style="display:none;"></span>
+    </button>
+  </form>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="footer-meta">
+    إصدار 2.0.0 — جميع الصلاحيات خاضعة لإدارة الأدمن
+  </div>
+</div>
+
+<script type="module">
+  import AuthService, { ROLE_HOME_PAGES } from './auth.js';
+
+  // Check if session already active -> direct redirect
+  const activeSession = AuthService.getSession();
+  if (activeSession && activeSession.role) {
+    const targetHome = ROLE_HOME_PAGES[activeSession.role] || 'dashboard.html';
+    window.location.href = targetHome;
+  }
+
+  // Toggle Password
+  window.togglePasswordVisibility = function() {
+    const pwdInput = document.getElementById('passwordInput');
+    const btn = document.getElementById('togglePwdBtn');
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      btn.textContent = 'إخفاء';
+    } else {
+      pwdInput.type = 'password';
+      btn.textContent = 'إظهار';
+    }
+  };
+
+  // Login Submit Handler
+  window.handleLoginSubmit = async function(e) {
+    e.preventDefault();
+    const identifier = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    const errorBox = document.getElementById('errorBox');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    errorBox.classList.remove('show');
+    errorBox.textContent = '';
+
+    submitBtn.disabled = true;
+    btnText.textContent = 'جاري التحقق...';
+    btnSpinner.style.display = 'inline-block';
+
+    try {
+      const session = await AuthService.login(identifier, password);
+      btnText.textContent = 'تم الدخول بنجاح';
+      
+      // Determine redirection according to user role
+      const targetHome = ROLE_HOME_PAGES[session.role] || 'dashboard.html';
+      setTimeout(() => {
+        window.location.href = targetHome;
+      }, 400);
+    } catch (err) {
+      submitBtn.disabled = false;
+      btnText.textContent = 'تسجيل الدخول';
+      btnSpinner.style.display = 'none';
+
+      errorBox.textContent = err.message || 'حدث خطأ أثناء تسجيل الدخول';
+      errorBox.classList.add('show');
+    }
+  };
+</script>
+
+</body>
+</html>

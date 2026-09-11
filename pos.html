@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — نقطة البيع (POS)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 18px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 50;
+}
+.topbar-logo {
+  font-size: 15px; font-weight: 800;
+  color: var(--primary); white-space: nowrap;
+}
+.topbar-sep { width: 1px; height: 28px; background: var(--border); }
+
+.topbar-type-btns { display: flex; gap: 6px; }
+.type-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+}
+.type-btn.active {
+  border-color: var(--primary);
+  color: #ffffff;
+  background: var(--primary);
+}
+
+.tbl-selector {
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  display: none;
+}
+.tbl-selector.show { display: block; }
+
+.topbar-right { margin-right: auto; display: flex; align-items: center; gap: 10px; }
+
+.btn-top {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-top:hover { border-color: var(--primary); color: var(--primary); }
+.btn-top.danger { color: var(--red); }
+.btn-top.danger:hover { background: #fef2f2; border-color: #fecaca; }
+
+/* LAYOUT */
+.pos-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  overflow: hidden;
+}
+
+/* MENU SECTION */
+.menu-col {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* SEARCH & CATEGORIES BAR */
+.menu-controls {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface);
+}
+
+.search-wrap { position: relative; }
+.search-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.search-input:focus { border-color: var(--primary); }
+
+.cats-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.cat-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cat-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+/* ITEMS GRID */
+.items-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.item-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 120px;
+  transition: all .15s;
+  position: relative;
+}
+.item-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.item-card.out-of-stock {
+  opacity: 0.55;
+  background: #f8fafc;
+  pointer-events: none;
+}
+.item-cat-badge {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.item-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+  margin: 4px 0;
+}
+.item-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary);
+  align-self: flex-start;
+}
+
+/* ORDER / CART PANEL */
+.order-col {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.order-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+}
+.order-num { font-size: 15px; font-weight: 800; color: var(--text); }
+.order-type-tag {
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(28, 105, 212, 0.08);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: var(--radius);
+}
+
+/* TABLE SESSION BANNER */
+.table-session-banner {
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  padding: 10px 14px;
+  font-size: 12px;
+  display: none;
+}
+.table-session-banner.show { display: block; }
+.session-info-line {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+/* ORDER ITEMS LIST */
+.order-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.order-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.oi-name { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; }
+.oi-price { font-size: 13px; font-weight: 800; color: var(--primary); width: 60px; text-align: left; }
+
+.qty-ctrl { display: flex; align-items: center; gap: 4px; }
+.qty-btn {
+  width: 24px; height: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.qty-btn:hover { background: #e2e8f0; }
+.qty-num { font-size: 13px; font-weight: 700; min-width: 20px; text-align: center; }
+
+.oi-del {
+  background: none; border: none; cursor: pointer;
+  color: var(--red); font-size: 14px; padding: 2px 4px;
+}
+
+/* ORDER FOOTER & TOTALS */
+.order-footer {
+  border-top: 1px solid var(--border);
+  background: #ffffff;
+  padding: 14px 16px;
+  flex-shrink: 0;
+}
+.discount-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.discount-row label { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.disc-input {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  font-family: inherit; font-size: 13px; color: var(--text);
+}
+.disc-type {
+  padding: 6px 8px;
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+}
+
+.summary-row {
+  display: flex; justify-content: space-between;
+  font-size: 13px; padding: 3px 0; color: var(--text-muted);
+}
+.summary-row.total {
+  font-size: 17px; font-weight: 800; color: var(--text);
+  padding-top: 6px; border-top: 1px solid var(--border); margin-top: 4px;
+}
+.summary-row.total span:last-child { color: var(--primary); }
+
+.pay-methods { display: flex; gap: 6px; margin: 10px 0; }
+.pay-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+}
+.pay-btn.active {
+  border-color: var(--green);
+  color: #ffffff;
+  background: var(--green);
+}
+
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-action-primary {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 14px; font-weight: 800; color: #ffffff;
+  cursor: pointer;
+}
+.btn-action-primary:hover { background: var(--primary-hover); }
+.btn-action-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-action-secondary {
+  width: 100%;
+  padding: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 13px; font-weight: 700; color: var(--text);
+  cursor: pointer;
+}
+.btn-action-secondary:hover { background: #e2e8f0; }
+
+/* MODALS */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 440px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close {
+  background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-muted);
+}
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: #ffffff;
+}
+
+/* RECEIPT STYLING */
+.receipt {
+  background: #fafafa;
+  border: 1px dashed var(--border-strong);
+  padding: 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.r-row { display: flex; justify-content: space-between; padding: 3px 0; }
+.r-total { font-weight: 800; font-size: 15px; color: var(--text); border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 700; display: none; z-index: 300;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">CashierSystem POS</div>
+  <div class="topbar-sep"></div>
+
+  <div class="topbar-type-btns">
+    <button class="type-btn active" data-type="dine" onclick="setType('dine')">صالة (Dine-in)</button>
+    <button class="type-btn" data-type="take" onclick="setType('take')">تيك أواي (Takeaway)</button>
+    <button class="type-btn" data-type="delivery" onclick="setType('delivery')">ديليفري (Delivery)</button>
+  </div>
+
+  <select class="tbl-selector show" id="tableSelector" onchange="handleTableSelect(this.value)">
+    <option value="">اختر طاولة</option>
+  </select>
+
+  <div class="topbar-right">
+    <button class="btn-top" onclick="navigate('tables.html')">خريطة الطاولات</button>
+    <button class="btn-top" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="btn-top" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+    <button class="btn-top danger" onclick="clearActiveOrder()">مسح الطلب</button>
+    <button class="btn-top danger" onclick="handleLogout()" style="background: #fee2e2; border-color: #fca5a5;">تسجيل الخروج</button>
+  </div>
+</div>
+
+<!-- POS BODY -->
+<div class="pos-body">
+
+  <!-- MENU COLUMN -->
+  <div class="menu-col">
+    <div class="menu-controls">
+      <div class="search-wrap">
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="بحث بالاسم أو الكود..." 
+          oninput="filterItems()" 
+        />
+      </div>
+      <div class="cats-bar" id="catsBar">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <div class="items-grid" id="itemsGrid">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+
+  <!-- ORDER / CART COLUMN -->
+  <div class="order-col">
+    <div class="order-header">
+      <span class="order-num" id="orderNum">طلب جديد</span>
+      <span class="order-type-tag" id="orderTypeTag">صالة</span>
+    </div>
+
+    <!-- TABLE SESSION BANNER (WHEN OCCUPIED OR RESERVED) -->
+    <div class="table-session-banner" id="tableSessionBanner">
+      <div class="session-info-line">
+        <span id="bannerTableName">طاولة 1</span>
+        <span id="bannerSessionTotal">0 ج</span>
+      </div>
+      <div style="font-size:11px;color:#1e293b;margin-top:2px;" id="bannerDetails">
+        العميل: — | الويتر: —
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button class="btn-top" style="padding:3px 8px;font-size:11px;" onclick="openRoundsModal()">عرض تفاصيل Rounds الجلسة</button>
+        <span id="bannerCheckinBtnWrap"></span>
+      </div>
+    </div>
+
+    <!-- ACTIVE ORDER ITEMS -->
+    <div class="order-items" id="orderItems">
+      <div class="order-empty" id="orderEmpty">
+        اختر الأصناف من القائمة للبدء
+      </div>
+    </div>
+
+    <!-- ORDER FOOTER -->
+    <div class="order-footer">
+      <div class="discount-row">
+        <label>خصم:</label>
+        <input type="number" id="discountVal" class="disc-input" placeholder="0" min="0" oninput="calcTotals()" />
+        <select id="discountType" class="disc-type" onchange="calcTotals()">
+          <option value="flat">جنيه</option>
+          <option value="pct">%</option>
+        </select>
+      </div>
+
+      <div class="summary-row">
+        <span>المجموع الفرعي (الطلب الحالي):</span>
+        <span id="sumSubtotal">0 ج</span>
+      </div>
+      <div class="summary-row">
+        <span>قيمة الخصم:</span>
+        <span id="sumDiscount">0 ج</span>
+      </div>
+      <div class="summary-row total">
+        <span>الإجمالي المستحق:</span>
+        <span id="sumTotal">0 ج</span>
+      </div>
+
+      <div class="pay-methods">
+        <button class="pay-btn active" data-pay="cash" onclick="setPayMethod(this)">كاش</button>
+        <button class="pay-btn" data-pay="card" onclick="setPayMethod(this)">فيزا</button>
+        <button class="pay-btn" data-pay="transfer" onclick="setPayMethod(this)">تحويل</button>
+        <button class="pay-btn" data-pay="officer" onclick="setPayMethod(this)">أوفيسير</button>
+      </div>
+
+      <!-- SPECIAL PAY DETAILS (OFFICER, ETC) -->
+      <div id="specialPayContainer" style="display:none;margin-bottom:8px;">
+        <label id="specialPayLabel" style="font-size:11px;font-weight:700;color:var(--primary);display:block;margin-bottom:4px;"></label>
+        <select id="specialPaySelect" style="width:100%;padding:6px;border:1px solid var(--border-strong);border-radius:var(--radius);font-size:12px;"></select>
+      </div>
+
+      <div class="action-buttons-group">
+        <!-- IF DINE-IN OCCUPIED TABLE: ALLOW ADDING AS A ROUND -->
+        <button class="btn-action-secondary" id="btnAddRoundBtn" style="display:none;" onclick="handleAddRoundToTable()">
+          إرسال Round للمطبخ وحفظه لجلسة الطاولة
+        </button>
+
+        <!-- STANDARD PAY / SETTLE TABLE BUTTON -->
+        <button class="btn-action-primary" id="payBtn" onclick="handleCheckoutAction()" disabled>
+          إتمام الدفع والفاتورة
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: VIEW PREVIOUS ROUNDS IN SESSION -->
+<div class="overlay" id="roundsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="roundsModalTitle">تفاصيل طلبات الطاولة (Rounds)</span>
+      <button class="modal-close" onclick="closeModal('roundsModal')">✕</button>
+    </div>
+    <div id="roundsModalBody" style="font-size:13px;max-height:350px;overflow-y:auto;"></div>
+    <div style="margin-top:16px;text-align:left;">
+      <button class="btn-top" onclick="closeModal('roundsModal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RECEIPT -->
+<div class="overlay" id="receiptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">فاتورة الحساب</span>
+      <button class="modal-close" onclick="closeModal('receiptModal')">✕</button>
+    </div>
+    <div class="receipt" id="receiptContent"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="btn-action-secondary" onclick="printReceipt()">طباعة الفاتورة</button>
+      <button class="btn-action-primary" onclick="finishAndResetOrder()">طلب جديد</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DELIVERY DETAILS -->
+<div class="overlay" id="deliveryDetailsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">بيانات طلب التوصيل (الديليفري)</span>
+      <button class="modal-close" onclick="closeModal('deliveryDetailsModal')">✕</button>
+    </div>
+    <form onsubmit="handleDeliverySubmit(event)">
+      <div class="form-group">
+        <label>اسم العميل *</label>
+        <input type="text" id="delCustomerName" required placeholder="مثال: أحمد عبد الله" />
+      </div>
+      <div class="form-group">
+        <label>رقم هاتف المحمول *</label>
+        <input type="tel" id="delCustomerPhone" required placeholder="مثال: 01012345678" />
+      </div>
+      <div class="form-group">
+        <label>العنوان بالتفصيل *</label>
+        <textarea id="delAddress" required placeholder="المنطقة، الشارع، البناية، الدور، الشقة" rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>طيار التوصيل (الكابتن)</label>
+        <select id="delRiderSelect">
+          <option value="كابتن المناوبة">كابتن المناوبة</option>
+          <option value="دليفري مستقل">دليفري مستقل</option>
+        </select>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+        <button type="button" class="btn-action-secondary" onclick="closeModal('deliveryDetailsModal')">إلغاء</button>
+        <button type="submit" class="btn-action-primary">تأكيد وشحن الطلب</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService, { TableManager, TABLE_STATUS, TABLE_STATUS_LABELS } from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('pos.html')) {
+  // redirect
+}
+
+AuthService.renderSidebarUI();
+
+// Globals & DB
+const DB = {
+  getItems: () => JSON.parse(localStorage.getItem('cs_items') || '[]'),
+  getCats: () => JSON.parse(localStorage.getItem('cs_cats') || '[]'),
+  getOrders: () => JSON.parse(localStorage.getItem('cs_orders') || '[]'),
+  saveOrders: (o) => localStorage.setItem('cs_orders', JSON.stringify(o)),
+  getStock: () => JSON.parse(localStorage.getItem('cs_stock') || '[]'),
+  saveStock: (s) => localStorage.setItem('cs_stock', JSON.stringify(s)),
+  getRecipes: () => JSON.parse(localStorage.getItem('cs_recipes') || '[]'),
+  logGuardEvent: (action, details, value = 0) => {
+    const logs = JSON.parse(localStorage.getItem('cs_guard_logs') || '[]');
+    const session = AuthService.getSession();
+    logs.push({
+      id: Date.now() + Math.random().toString(36).substr(2, 5),
+      timestamp: new Date().toISOString(),
+      user: session ? session.username : 'النظام',
+      role: session ? session.role : 'سيستم',
+      action, details, value: parseFloat(value) || 0
+    });
+    localStorage.setItem('cs_guard_logs', JSON.stringify(logs));
+  }
+};
+
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = () => AuthService.logout();
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// -------------------------------------------------------------
+// State
+// -------------------------------------------------------------
+let orderType = 'dine';
+let selectedTable = null;
+let activeCat = 'all';
+let order = []; // [{ itemId, name, price, qty, note }]
+let payMethod = 'cash';
+
+// Seed menu data if empty
+function seedMenuIfEmpty() {
+  if (DB.getCats().length === 0) {
+    localStorage.setItem('cs_cats', JSON.stringify([
+      { id: 1, name: 'مشويات' },
+      { id: 2, name: 'مقبلات وسلطات' },
+      { id: 3, name: 'مشروبات' },
+      { id: 4, name: 'حلويات' }
+    ]));
+  }
+  if (DB.getItems().length === 0) {
+    localStorage.setItem('cs_items', JSON.stringify([
+      { id: 1, name: 'كباب مشكل', price: 95, catId: 1, code: 'K01', available: true },
+      { id: 2, name: 'شيش طاووق', price: 75, catId: 1, code: 'K02', available: true },
+      { id: 3, name: 'فراخ مشوية على الفحم', price: 90, catId: 1, code: 'K03', available: true },
+      { id: 4, name: 'حمام محشي أرز', price: 80, catId: 1, code: 'K04', available: true },
+      { id: 5, name: 'سلطة خضراء', price: 25, catId: 2, code: 'M01', available: true },
+      { id: 6, name: 'متبل باذنجان', price: 20, catId: 2, code: 'M02', available: true },
+      { id: 7, name: 'حمص بالشامي', price: 20, catId: 2, code: 'M03', available: true },
+      { id: 8, name: 'عصير برتقال فريش', price: 25, catId: 3, code: 'D01', available: true },
+      { id: 9, name: 'شاي تلقيمة بالنعناع', price: 15, catId: 3, code: 'D02', available: true },
+      { id: 10, name: 'مياه معدنية', price: 10, catId: 3, code: 'D03', available: true },
+      { id: 11, name: 'أم علي بالمكسرات', price: 35, catId: 4, code: 'S01', available: true },
+      { id: 12, name: 'كنافة نابلسية بالجبن', price: 45, catId: 4, code: 'S02', available: true }
+    ]));
+  }
+}
+seedMenuIfEmpty();
+
+// -------------------------------------------------------------
+// Initialization & URL Params Handling
+// -------------------------------------------------------------
+function initPOS() {
+  buildCatsBar();
+  buildItemsGrid();
+  buildTableSelector();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const tableIdParam = urlParams.get('tableId');
+  const actionParam = urlParams.get('action');
+
+  if (tableIdParam) {
+    setType('dine');
+    const sel = document.getElementById('tableSelector');
+    sel.value = tableIdParam;
+    handleTableSelect(tableIdParam);
+
+    if (actionParam === 'checkout') {
+      setTimeout(() => {
+        handleCheckoutAction();
+      }, 300);
+    }
+  } else {
+    updateOrderUI();
+  }
+}
+
+// -------------------------------------------------------------
+// Types & Tables
+// -------------------------------------------------------------
+window.setType = function(type) {
+  orderType = type;
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  const tblSel = document.getElementById('tableSelector');
+  tblSel.classList.toggle('show', type === 'dine');
+
+  const typeLabels = { dine:'صالة', take:'تيك أواي', delivery:'ديليفري' };
+  document.getElementById('orderTypeTag').textContent = typeLabels[type] || type;
+
+  if (type !== 'dine') {
+    selectedTable = null;
+    hideTableSessionBanner();
+  } else {
+    if (tblSel.value) handleTableSelect(tblSel.value);
+  }
+  updateOrderUI();
+};
+
+function buildTableSelector() {
+  const sel = document.getElementById('tableSelector');
+  const tables = TableManager.getTables();
+  sel.innerHTML = '<option value="">اختر طاولة</option>' + tables.map(t => {
+    const stLabel = TABLE_STATUS_LABELS[t.status] || t.status;
+    return `<option value="${t.id}" ${selectedTable == t.id ? 'selected':''}>طاولة ${t.number} (${stLabel})</option>`;
+  }).join('');
+}
+
+window.handleTableSelect = function(tableId) {
+  selectedTable = tableId ? parseInt(tableId) : null;
+  if (!selectedTable) {
+    hideTableSessionBanner();
+    updateOrderUI();
+    return;
+  }
+
+  const t = TableManager.getTable(selectedTable);
+  if (!t) return;
+
+  const banner = document.getElementById('tableSessionBanner');
+  const bannerName = document.getElementById('bannerTableName');
+  const bannerTotal = document.getElementById('bannerSessionTotal');
+  const bannerDetails = document.getElementById('bannerDetails');
+  const checkinWrap = document.getElementById('bannerCheckinBtnWrap');
+
+  bannerName.textContent = `طاولة ${t.number} (${TABLE_STATUS_LABELS[t.status] || t.status})`;
+
+  if (t.status === TABLE_STATUS.RESERVED) {
+    const res = t.reservation || {};
+    banner.classList.add('show');
+    bannerTotal.textContent = 'حجز مسجل';
+    bannerDetails.textContent = `حجز للعميل: ${res.customerName || 'عميل محجوز'} | الوقت: ${res.time || '—'} (${res.guestsCount || 4} أفراد)`;
+    checkinWrap.innerHTML = `<button class="btn-top" style="background:var(--primary);color:#fff;border:none;padding:3px 8px;font-size:11px;" onclick="checkInReservedTableFromPOS('${t.id}')">حضور العميل وفتح الجلسة</button>`;
+    document.getElementById('btnAddRoundBtn').style.display = 'none';
+  } else if (t.status === TABLE_STATUS.OCCUPIED) {
+    const sess = t.currentSession || {};
+    const rounds = sess.rounds || [];
+    banner.classList.add('show');
+    bannerTotal.textContent = `إجمالي الجلسة: ${(t.total || 0).toLocaleString('ar-EG')} ج`;
+    bannerDetails.textContent = `العميل: ${sess.customerName || 'عميل صالة'} | الويتر: ${sess.waiter || t.waiter || '—'} | تم تسجيل ${rounds.length} Round`;
+    checkinWrap.innerHTML = '';
+    document.getElementById('btnAddRoundBtn').style.display = 'block';
+  } else {
+    // Available or cleaning
+    banner.classList.remove('show');
+    document.getElementById('btnAddRoundBtn').style.display = 'none';
+  }
+
+  updateOrderUI();
+};
+
+function hideTableSessionBanner() {
+  document.getElementById('tableSessionBanner').classList.remove('show');
+  document.getElementById('btnAddRoundBtn').style.display = 'none';
+}
+
+window.checkInReservedTableFromPOS = function(tableId) {
+  TableManager.checkInReservation(tableId, 'وليد صبحي صالة');
+  buildTableSelector();
+  handleTableSelect(tableId);
+  showToast('تم استقبال العميل وفتح جلسة الطاولة بنجاح');
+};
+
+// -------------------------------------------------------------
+// Menu & Categories
+// -------------------------------------------------------------
+function buildCatsBar() {
+  const cats = DB.getCats();
+  const bar = document.getElementById('catsBar');
+  bar.innerHTML = `<button class="cat-btn ${activeCat==='all'?'active':''}" onclick="setCat('all')">الكل</button>` +
+    cats.map(c => `<button class="cat-btn ${activeCat===c.id?'active':''}" onclick="setCat(${c.id})">${c.name}</button>`).join('');
+}
+
+window.setCat = function(id) {
+  activeCat = id;
+  buildCatsBar();
+  buildItemsGrid();
+};
+
+window.filterItems = function() {
+  buildItemsGrid();
+};
+
+function buildItemsGrid() {
+  const items = DB.getItems();
+  const search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  const filtered = items.filter(item => {
+    const matchCat = activeCat === 'all' || item.catId === activeCat;
+    const matchSrch = !search || item.name.toLowerCase().includes(search) || (item.code||'').toLowerCase().includes(search);
+    return matchCat && matchSrch;
+  });
+
+  const grid = document.getElementById('itemsGrid');
+  const cats = DB.getCats();
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted);font-weight:700;">لا توجد أصناف مطابقة</div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(item => {
+    const cat = cats.find(c => c.id === item.catId);
+    return `
+      <div class="item-card ${!item.available ? 'out-of-stock':''}" onclick="addToOrder(${item.id})">
+        <div>
+          <span class="item-cat-badge">${cat ? cat.name : ''}</span>
+          <div class="item-name">${item.name}</div>
+        </div>
+        <div class="item-price">${item.price} ج</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// -------------------------------------------------------------
+// Cart / Order Logic
+// -------------------------------------------------------------
+window.addToOrder = function(itemId) {
+  const items = DB.getItems();
+  const item = items.find(i => i.id === itemId);
+  if (!item || !item.available) return;
+
+  const existing = order.find(o => o.itemId === itemId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    order.push({ itemId: item.id, name: item.name, price: item.price, qty: 1, note: '' });
+  }
+  updateOrderUI();
+};
+
+window.changeQty = function(idx, delta) {
+  order[idx].qty += delta;
+  if (order[idx].qty <= 0) {
+    order.splice(idx, 1);
+  }
+  updateOrderUI();
+};
+
+window.removeItem = function(idx) {
+  order.splice(idx, 1);
+  updateOrderUI();
+};
+
+window.clearActiveOrder = function() {
+  if (order.length === 0) return;
+  order = [];
+  updateOrderUI();
+  showToast('تم مسح وإفراغ السلة');
+};
+
+function updateOrderUI() {
+  const container = document.getElementById('orderItems');
+  const payBtn = document.getElementById('payBtn');
+
+  const t = selectedTable ? TableManager.getTable(selectedTable) : null;
+  const isOccupiedTable = t && t.status === TABLE_STATUS.OCCUPIED;
+
+  if (order.length === 0) {
+    container.innerHTML = `<div class="order-empty">اختر الأصناف من القائمة للبدء</div>`;
+    // If occupied table with past rounds, enable pay button even if active cart is empty!
+    if (isOccupiedTable && t.total > 0) {
+      payBtn.disabled = false;
+      payBtn.textContent = `طلب الحساب وإغلاق الطاولة (${(t.total).toLocaleString('ar-EG')} ج)`;
+    } else {
+      payBtn.disabled = true;
+      payBtn.textContent = 'إتمام الدفع والفاتورة';
+    }
+  } else {
+    container.innerHTML = order.map((o, idx) => `
+      <div class="order-item">
+        <div class="oi-name">${o.name}</div>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+          <span class="qty-num">${o.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+        </div>
+        <span class="oi-price">${(o.price * o.qty).toLocaleString('ar-EG')} ج</span>
+        <button class="oi-del" onclick="removeItem(${idx})" title="حذف">✕</button>
+      </div>
+    `).join('');
+
+    payBtn.disabled = false;
+    if (isOccupiedTable) {
+      payBtn.textContent = 'إتمام الحساب والدفع الشامل للجلسة';
+    } else {
+      payBtn.textContent = 'إتمام الدفع والفاتورة';
+    }
+  }
+
+  calcTotals();
+}
+
+function calcTotals() {
+  const cartSubtotal = order.reduce((sum, o) => sum + (o.price * o.qty), 0);
+  const t = selectedTable ? TableManager.getTable(selectedTable) : null;
+  const pastSessionTotal = (t && t.status === TABLE_STATUS.OCCUPIED) ? (t.total || 0) : 0;
+
+  const grandSubtotal = cartSubtotal + pastSessionTotal;
+  const discVal = parseFloat(document.getElementById('discountVal').value) || 0;
+  const discType = document.getElementById('discountType').value;
+  const discount = discType === 'pct' ? (grandSubtotal * (discVal / 100)) : Math.min(discVal, grandSubtotal);
+  const total = Math.max(0, grandSubtotal - discount);
+
+  document.getElementById('sumSubtotal').textContent = grandSubtotal.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('sumDiscount').textContent = discount > 0 ? ('- ' + discount.toLocaleString('ar-EG') + ' ج') : '0 ج';
+  document.getElementById('sumTotal').textContent = total.toLocaleString('ar-EG') + ' ج';
+}
+
+window.setPayMethod = function(btn) {
+  payMethod = btn.dataset.pay;
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.toggle('active', b === btn));
+  const container = document.getElementById('specialPayContainer');
+  const label = document.getElementById('specialPayLabel');
+  const select = document.getElementById('specialPaySelect');
+
+  if (payMethod === 'officer') {
+    container.style.display = 'block';
+    label.textContent = 'اختر المدير المصرح له (ميزانية معتمدة):';
+    select.innerHTML = `
+      <option value="1">علاء جلال (أمين عام)</option>
+      <option value="2">إبراهيم الصاوي (مدير الأغذية)</option>
+      <option value="3">يوسف الصباغ (مدير الصالة)</option>
+    `;
+  } else {
+    container.style.display = 'none';
+  }
+};
+
+// -------------------------------------------------------------
+// Round Management for Tables
+// -------------------------------------------------------------
+window.handleAddRoundToTable = function() {
+  if (!selectedTable) return showToast('يرجى اختيار طاولة أولاً');
+  if (order.length === 0) return showToast('أضف أصنافاً أولاً للـ Round');
+
+  try {
+    TableManager.addRound(selectedTable, order, 'وليد صبحي صالة');
+    // Deduct raw ingredients
+    deductRecipeStock(order);
+
+    order = [];
+    handleTableSelect(selectedTable);
+    showToast('تم إرسال الـ Round للمطبخ وحفظه في جلسة الطاولة');
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
+window.openRoundsModal = function() {
+  if (!selectedTable) return;
+  const t = TableManager.getTable(selectedTable);
+  if (!t || !t.currentSession) return;
+
+  const sess = t.currentSession;
+  const rounds = sess.rounds || [];
+  const bodyEl = document.getElementById('roundsModalBody');
+
+  if (rounds.length === 0) {
+    bodyEl.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:20px;">لا توجد طلبات سابقة مسجلة</div>';
+  } else {
+    bodyEl.innerHTML = rounds.map(r => `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-weight:800;color:var(--primary);">
+          <span>Round #${r.roundNumber} (الساعة: ${r.time})</span>
+          <span>${r.subtotal.toLocaleString('ar-EG')} ج</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin:2px 0 6px;">الويتر: ${r.waiter || '—'}</div>
+        <div>
+          ${r.items.map(it => `• ${it.name} × ${it.qty} (${(it.price * it.qty).toLocaleString('ar-EG')} ج)`).join('<br>')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('roundsModalTitle').textContent = `طلبات طاولة ${t.number} — العميل: ${sess.customerName}`;
+  openModal('roundsModal');
+};
+
+// -------------------------------------------------------------
+// Checkout / Settlement Actions
+// -------------------------------------------------------------
+window.handleCheckoutAction = function() {
+  if (orderType === 'delivery') {
+    if (order.length === 0) return showToast('السلة فارغة');
+    openModal('deliveryDetailsModal');
+    return;
+  }
+
+  if (orderType === 'dine' && selectedTable) {
+    const t = TableManager.getTable(selectedTable);
+    if (t && t.status === TABLE_STATUS.OCCUPIED) {
+      // If there are newly drafted items in cart, save as final round first
+      if (order.length > 0) {
+        TableManager.addRound(selectedTable, order, 'وليد صبحي صالة');
+        deductRecipeStock(order);
+        order = [];
+      }
+      // Settle table
+      const discVal = parseFloat(document.getElementById('discountVal').value) || 0;
+      const discType = document.getElementById('discountType').value;
+      const invoice = TableManager.checkoutTable(selectedTable, payMethod, discVal, discType);
+      
+      DB.logGuardEvent('إغلاق ودفع طاولة', `تم إغلاق ودفع حساب طاولة ${t.number} بإجمالي ${invoice.total} ج`, invoice.total);
+      showReceipt(invoice);
+      buildTableSelector();
+      hideTableSessionBanner();
+      return;
+    }
+  }
+
+  // One-off standard dine or takeaway
+  if (order.length === 0) return showToast('السلة فارغة');
+  execStandardCheckout();
+};
+
+function execStandardCheckout() {
+  const subtotal = order.reduce((sum, o) => sum + (o.price * o.qty), 0);
+  const discVal = parseFloat(document.getElementById('discountVal').value) || 0;
+  const discType = document.getElementById('discountType').value;
+  const discount = discType === 'pct' ? (subtotal * (discVal / 100)) : Math.min(discVal, subtotal);
+  const total = Math.max(0, subtotal - discount);
+
+  const orders = DB.getOrders();
+  const oId = orders.length > 0 ? (Math.max(...orders.map(o => parseInt(o.id) || 0)) + 1) : 1;
+  const now = new Date();
+
+  const invoice = {
+    id: oId,
+    type: orderType,
+    tableId: selectedTable,
+    tableLabel: selectedTable ? ('طاولة ' + TableManager.getTable(selectedTable)?.number) : null,
+    items: [...order],
+    subtotal, discount, total,
+    payMethod,
+    status: 'paid',
+    time: now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+    date: now.toISOString().split('T')[0],
+    createdAt: now.toISOString()
+  };
+
+  orders.push(invoice);
+  DB.saveOrders(orders);
+  deductRecipeStock(order);
+
+  DB.logGuardEvent('فاتورة مبيعات', `تم إصدار الفاتورة #${oId} بقيمة ${total} ج`, total);
+  showReceipt(invoice);
+}
+
+window.handleDeliverySubmit = function(e) {
+  e.preventDefault();
+  const name = document.getElementById('delCustomerName').value.trim();
+  const phone = document.getElementById('delCustomerPhone').value.trim();
+  const address = document.getElementById('delAddress').value.trim();
+  const rider = document.getElementById('delRiderSelect').value;
+
+  const subtotal = order.reduce((sum, o) => sum + (o.price * o.qty), 0);
+  const discVal = parseFloat(document.getElementById('discountVal').value) || 0;
+  const discType = document.getElementById('discountType').value;
+  const discount = discType === 'pct' ? (subtotal * (discVal / 100)) : Math.min(discVal, subtotal);
+  const total = Math.max(0, subtotal - discount);
+
+  const orders = DB.getOrders();
+  const oId = orders.length > 0 ? (Math.max(...orders.map(o => parseInt(o.id) || 0)) + 1) : 1;
+  const now = new Date();
+
+  const invoice = {
+    id: oId,
+    type: 'delivery',
+    customer: name,
+    customerPhone: phone,
+    dAddr: address,
+    dCapName: rider,
+    dStatus: 'pending',
+    items: [...order],
+    subtotal, discount, total,
+    payMethod,
+    status: 'paid',
+    time: now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+    date: now.toISOString().split('T')[0],
+    createdAt: now.toISOString()
+  };
+
+  orders.push(invoice);
+  DB.saveOrders(orders);
+  deductRecipeStock(order);
+  closeModal('deliveryDetailsModal');
+
+  showReceipt(invoice);
+};
+
+function deductRecipeStock(itemsList) {
+  try {
+    const recipes = DB.getRecipes();
+    const stock = DB.getStock();
+    itemsList.forEach(item => {
+      const r = recipes.find(rec => rec.menuId == item.itemId);
+      if (r && r.ingredients) {
+        r.ingredients.forEach(ing => {
+          const raw = stock.find(s => s.id == ing.stockId);
+          if (raw) {
+            const req = (parseFloat(ing.qty) || 0) * (parseFloat(item.qty) || 0);
+            raw.qty = Math.max(0, (parseFloat(raw.qty) || 0) - req);
+          }
+        });
+      }
+    });
+    DB.saveStock(stock);
+  } catch (err) {
+    console.error('Stock deduction error:', err);
+  }
+}
+
+// -------------------------------------------------------------
+// Receipts
+// -------------------------------------------------------------
+function showReceipt(inv) {
+  const payLabels = { cash:'كاش', card:'فيزا', transfer:'تحويل', officer:'أوفيسير' };
+  const typeLabels = { dine:'صالة', take:'تيك أواي', delivery:'ديليفري' };
+
+  let roundsHtml = '';
+  if (inv.rounds && inv.rounds.length > 0) {
+    roundsHtml = `
+      <div style="margin:6px 0;border-top:1px dashed var(--border-strong);padding-top:6px;">
+        <div style="font-weight:700;font-size:11px;color:var(--text-muted);margin-bottom:4px;">تفاصيل الـ Rounds بالجلسة:</div>
+        ${inv.rounds.map(r => `
+          <div style="font-size:11px;margin-bottom:4px;">
+            <strong>Round #${r.roundNumber} (${r.time}):</strong>
+            ${r.items.map(it => `${it.name} × ${it.qty}`).join(', ')}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  document.getElementById('receiptContent').innerHTML = `
+    <div style="text-align:center;font-weight:800;font-size:15px;">CashierSystem</div>
+    <div style="text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:8px;">${new Date().toLocaleString('ar-EG')}</div>
+    <div class="r-row"><span>رقم الفاتورة:</span><span>#${inv.id}</span></div>
+    <div class="r-row"><span>النوع:</span><span>${typeLabels[inv.type] || inv.type}</span></div>
+    ${inv.tableLabel ? `<div class="r-row"><span>الطاولة:</span><span>${inv.tableLabel}</span></div>` : ''}
+    ${inv.customer ? `<div class="r-row"><span>العميل:</span><span>${inv.customer}</span></div>` : ''}
+    ${inv.waiter ? `<div class="r-row"><span>الويتر:</span><span>${inv.waiter}</span></div>` : ''}
+    <hr style="border:none;border-top:1px dashed var(--border-strong);margin:6px 0;" />
+    ${inv.items.map(i => `
+      <div class="r-row">
+        <span>${i.name} × ${i.qty}</span>
+        <span>${(i.price * i.qty).toLocaleString('ar-EG')} ج</span>
+      </div>
+    `).join('')}
+    ${roundsHtml}
+    <hr style="border:none;border-top:1px dashed var(--border-strong);margin:6px 0;" />
+    <div class="r-row"><span>المجموع:</span><span>${(inv.subtotal||0).toLocaleString('ar-EG')} ج</span></div>
+    ${inv.discount > 0 ? `<div class="r-row"><span>خصم:</span><span>- ${(inv.discount).toLocaleString('ar-EG')} ج</span></div>` : ''}
+    <div class="r-row r-total"><span>الإجمالي النهائي:</span><span>${(inv.total||0).toLocaleString('ar-EG')} ج</span></div>
+    <div class="r-row" style="margin-top:6px;font-size:12px;"><span>طريقة السداد:</span><span>${payLabels[inv.payMethod] || inv.payMethod}</span></div>
+  `;
+  openModal('receiptModal');
+}
+
+window.printReceipt = function() {
+  const content = document.getElementById('receiptContent').innerHTML;
+  const w = window.open('', '_blank', 'width=380,height=600');
+  w.document.write(`
+    <html dir="rtl">
+    <head>
+      <title>طباعة الفاتورة</title>
+      <style>body{font-family:sans-serif;padding:20px;font-size:13px;}.r-row{display:flex;justify-content:space-between;padding:3px 0;}.r-total{font-weight:bold;font-size:15px;}</style>
+    </head>
+    <body>
+      ${content}
+      <br/><button onclick="window.print()">طباعة</button>
+    </body>
+    </html>
+  `);
+  w.document.close();
+};
+
+window.finishAndResetOrder = function() {
+  order = [];
+  selectedTable = null;
+  document.getElementById('discountVal').value = '';
+  document.getElementById('tableSelector').value = '';
+  hideTableSessionBanner();
+  updateOrderUI();
+  closeModal('receiptModal');
+};
+
+// Start
+initPOS();
+</script>
+
+</body>
+</html>

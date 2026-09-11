@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — إدارة توصيل الطلبات (الديليفري)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px; margin: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #e2e8f0; color: #334155; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px; color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px; border-radius: var(--radius);
+  display: inline-block; margin-top: 2px; font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: .5px; padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+  cursor: pointer; transition: background .15s, color .15s;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; background: none;
+  width: 100%; text-align: right; font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%; padding: 9px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--radius); color: var(--red);
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+
+/* DELIVERY BOARD COLUMNS */
+.delivery-board {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  flex: 1;
+}
+@media (max-width: 1024px) {
+  .delivery-board { grid-template-columns: 1fr; }
+}
+
+.board-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.col-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+}
+.col-title { font-size: 14px; font-weight: 800; color: var(--text); }
+.col-count {
+  font-size: 12px; font-weight: 800;
+  padding: 2px 8px; border-radius: var(--radius);
+}
+.col-count.pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.col-count.road    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.col-count.done    { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+.col-cards {
+  padding: 14px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.delivery-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all .15s;
+}
+.delivery-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.dc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+.dc-id { font-size: 14px; font-weight: 800; color: var(--text); }
+.dc-total { font-size: 14px; font-weight: 800; color: var(--primary); }
+
+.dc-info { font-size: 12px; color: var(--text); line-height: 1.4; }
+.dc-sub { font-size: 11px; color: var(--text-muted); }
+
+.btn-card-action {
+  width: 100%;
+  padding: 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface2);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  color: var(--text); cursor: pointer; text-align: center;
+  margin-top: 4px;
+}
+.btn-card-action:hover { background: #e2e8f0; }
+.btn-card-action.primary {
+  background: var(--primary); color: #ffffff; border-color: var(--primary);
+}
+.btn-card-action.primary:hover { background: var(--primary-hover); }
+.btn-card-action.success {
+  background: var(--green); color: #ffffff; border-color: var(--green);
+}
+
+/* MODAL */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 440px; max-width: 95vw;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close { background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; }
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text); background: #ffffff;
+}
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 700; display: none; z-index: 200;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item active" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">إدارة أسطول التوصيل والطلبات الخارجية</span>
+    <div class="topbar-right">
+      <button class="btn-card-action primary" style="width:auto;padding:6px 14px;" onclick="navigate('pos.html')">طلب ديليفري جديد من الكاشير</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">قيد التجهيز بالمطبخ</div>
+        <div class="stat-val" id="statPendingCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">على الطريق مع الكباتن</div>
+        <div class="stat-val" id="statRoadCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">تم التسليم والتحصيل اليوم</div>
+        <div class="stat-val" id="statDoneCount">0</div>
+      </div>
+    </div>
+
+    <!-- BOARD -->
+    <div class="delivery-board">
+
+      <!-- COL 1: PENDING -->
+      <div class="board-col">
+        <div class="col-header">
+          <span class="col-title">قيد التجهيز / بانتظار الطيار</span>
+          <span class="col-count pending" id="badgePending">0</span>
+        </div>
+        <div class="col-cards" id="colPending"></div>
+      </div>
+
+      <!-- COL 2: ON THE ROAD -->
+      <div class="board-col">
+        <div class="col-header">
+          <span class="col-title">على الطريق للتوصيل</span>
+          <span class="col-count road" id="badgeRoad">0</span>
+        </div>
+        <div class="col-cards" id="colRoad"></div>
+      </div>
+
+      <!-- COL 3: DELIVERED -->
+      <div class="board-col">
+        <div class="col-header">
+          <span class="col-title">تم التسليم والتحصيل</span>
+          <span class="col-count done" id="badgeDone">0</span>
+        </div>
+        <div class="col-cards" id="colDone"></div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: ASSIGN RIDER -->
+<div class="overlay" id="assignModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">تعيين طيار التوصيل للطلب</span>
+      <button class="modal-close" onclick="closeModal('assignModal')">✕</button>
+    </div>
+    <form onsubmit="handleSaveAssign(event)">
+      <input type="hidden" id="assignOrderId" />
+
+      <div class="form-group">
+        <label>رقم الطلب والمبلغ</label>
+        <div id="assignOrderMeta" style="font-size:13px;font-weight:700;color:var(--primary);padding:6px 0;"></div>
+      </div>
+
+      <div class="form-group">
+        <label>عنوان التوصيل</label>
+        <textarea id="assignAddress" rows="2" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>اختر الكابتن المسئول</label>
+        <select id="assignRiderSelect">
+          <option value="كابتن كريم صبحي">كابتن كريم صبحي (موتوسيكل 1)</option>
+          <option value="كابتن أحمد سامي">كابتن أحمد سامي (موتوسيكل 2)</option>
+          <option value="كابتن محمود رضا">كابتن محمود رضا (موتوسيكل 3)</option>
+          <option value="طيار خارجي متعاقد">طيار خارجي متعاقد</option>
+        </select>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn-card-action" style="width:auto;" onclick="closeModal('assignModal')">إلغاء</button>
+        <button type="submit" class="btn-card-action primary" style="width:auto;">انطلاق الكابتن للتسليم</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('delivery.html')) {
+  // redirect
+}
+
+AuthService.renderSidebarUI();
+
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = async () => {
+  await AuthService.logout();
+};
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+window.renderDeliveries = function() {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const deliveryOrders = orders.filter(o => o.type === 'delivery');
+
+  const pending = deliveryOrders.filter(o => !o.dStatus || o.dStatus === 'pending');
+  const onRoad = deliveryOrders.filter(o => o.dStatus === 'road');
+  const done = deliveryOrders.filter(o => o.dStatus === 'done');
+
+  // Stats
+  document.getElementById('statPendingCount').textContent = pending.length;
+  document.getElementById('statRoadCount').textContent = onRoad.length;
+  document.getElementById('statDoneCount').textContent = done.length;
+
+  document.getElementById('badgePending').textContent = pending.length;
+  document.getElementById('badgeRoad').textContent = onRoad.length;
+  document.getElementById('badgeDone').textContent = done.length;
+
+  // Render pending
+  const colPending = document.getElementById('colPending');
+  if (pending.length === 0) {
+    colPending.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">لا توجد طلبات معلقة</div>';
+  } else {
+    colPending.innerHTML = pending.map(o => `
+      <div class="delivery-card">
+        <div class="dc-header">
+          <span class="dc-id">طلب #${o.id}</span>
+          <span class="dc-total">${(o.total || 0).toLocaleString('ar-EG')} ج</span>
+        </div>
+        <div class="dc-info">
+          <div><strong>العميل:</strong> ${o.customer || '—'}</div>
+          <div><strong>الهاتف:</strong> ${o.customerPhone || '—'}</div>
+          <div><strong>العنوان:</strong> ${o.dAddr || '—'}</div>
+        </div>
+        <div class="dc-sub">الساعة: ${o.time || '—'} | ${(o.items||[]).length} أصناف</div>
+        <button class="btn-card-action primary" onclick="openAssignModal('${o.id}')">
+          تعيين كابتن وخروج الطلب
+        </button>
+      </div>
+    `).join('');
+  }
+
+  // Render on road
+  const colRoad = document.getElementById('colRoad');
+  if (onRoad.length === 0) {
+    colRoad.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">لا توجد طلبات على الطريق</div>';
+  } else {
+    colRoad.innerHTML = onRoad.map(o => `
+      <div class="delivery-card">
+        <div class="dc-header">
+          <span class="dc-id">طلب #${o.id}</span>
+          <span class="dc-total">${(o.total || 0).toLocaleString('ar-EG')} ج</span>
+        </div>
+        <div class="dc-info">
+          <div><strong>الطيار:</strong> ${o.dCapName || '—'}</div>
+          <div><strong>العميل:</strong> ${o.customer || '—'} (${o.customerPhone || ''})</div>
+          <div><strong>العنوان:</strong> ${o.dAddr || '—'}</div>
+        </div>
+        <button class="btn-card-action success" onclick="markDelivered('${o.id}')">
+          تأكيد التسليم واستلام النقدية
+        </button>
+      </div>
+    `).join('');
+  }
+
+  // Render done
+  const colDone = document.getElementById('colDone');
+  if (done.length === 0) {
+    colDone.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:20px;">لا توجد تسليمات مكتملة اليوم</div>';
+  } else {
+    colDone.innerHTML = done.map(o => `
+      <div class="delivery-card" style="opacity:0.85;">
+        <div class="dc-header">
+          <span class="dc-id">طلب #${o.id}</span>
+          <span class="dc-total">${(o.total || 0).toLocaleString('ar-EG')} ج</span>
+        </div>
+        <div class="dc-info">
+          <div><strong>العميل:</strong> ${o.customer || '—'}</div>
+          <div><strong>المستلم عبر:</strong> ${o.dCapName || '—'}</div>
+        </div>
+        <div class="dc-sub" style="color:var(--green);font-weight:700;">تم التسليم بنجاح</div>
+      </div>
+    `).join('');
+  }
+};
+
+window.openAssignModal = function(orderId) {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const o = orders.find(x => String(x.id) === String(orderId));
+  if (!o) return;
+
+  document.getElementById('assignOrderId').value = orderId;
+  document.getElementById('assignOrderMeta').textContent = `طلب #${o.id} — إجمالي: ${(o.total || 0).toLocaleString('ar-EG')} ج`;
+  document.getElementById('assignAddress').value = o.dAddr || '';
+  openModal('assignModal');
+};
+
+window.handleSaveAssign = function(e) {
+  e.preventDefault();
+  const id = document.getElementById('assignOrderId').value;
+  const rider = document.getElementById('assignRiderSelect').value;
+  const addr = document.getElementById('assignAddress').value.trim();
+
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const idx = orders.findIndex(x => String(x.id) === String(id));
+  if (idx >= 0) {
+    orders[idx].dStatus = 'road';
+    orders[idx].dCapName = rider;
+    orders[idx].dAddr = addr;
+    localStorage.setItem('cs_orders', JSON.stringify(orders));
+
+    closeModal('assignModal');
+    showToast('تم تعيين الكابتن وخروج الطلب للتسليم بنجاح');
+    renderDeliveries();
+  }
+};
+
+window.markDelivered = function(orderId) {
+  const orders = JSON.parse(localStorage.getItem('cs_orders') || '[]');
+  const idx = orders.findIndex(x => String(x.id) === String(orderId));
+  if (idx >= 0) {
+    orders[idx].dStatus = 'done';
+    localStorage.setItem('cs_orders', JSON.stringify(orders));
+
+    showToast('تم تأكيد تسليم الأوردر وتوريد قيمته');
+    renderDeliveries();
+  }
+};
+
+// Start
+renderDeliveries();
+</script>
+
+</body>
+</html>

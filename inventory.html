@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — إدارة المخزون والمواد الخام والريسيبي</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px; margin: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #e2e8f0; color: #334155; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px; color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px; border-radius: var(--radius);
+  display: inline-block; margin-top: 2px; font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: .5px; padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+  cursor: pointer; transition: background .15s, color .15s;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; background: none;
+  width: 100%; text-align: right; font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%; padding: 9px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--radius); color: var(--red);
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+
+/* TABS */
+.tabs-bar {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+.tab-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* CONTROLS */
+.controls-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.btn-primary {
+  padding: 8px 16px;
+  background: var(--primary);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; font-weight: 700; color: #ffffff;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: #ffffff; width: 240px;
+}
+
+/* TABLE */
+.table-wrap {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+table.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: right;
+}
+table.custom-table th {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+table.custom-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+table.custom-table tr:hover td { background: var(--surface2); }
+
+.badge-low {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge-ok {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.btn-action-small {
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: #ffffff;
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--text);
+  cursor: pointer;
+}
+.btn-action-small:hover { background: var(--surface2); }
+
+/* MODALS */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 480px; max-width: 95vw;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close { background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; }
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.form-group input, .form-group select {
+  width: 100%; padding: 8px 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text); background: #ffffff;
+}
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 700; display: none; z-index: 200;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item active" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">إدارة المخزون والمواد الخام وريسيبي الأطباق</span>
+    <div class="topbar-right">
+      <button class="btn-primary" onclick="openAddStockModal()">إضافة مادة خام جديدة</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">إجمالي الخامات المسجلة</div>
+        <div class="stat-val" id="statStockCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">خامات قاربت على النفاد (حد إعادة الطلب)</div>
+        <div class="stat-val" style="color:var(--red);" id="statLowCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">القيمة التقديرية لرصيد المخزون</div>
+        <div class="stat-val" id="statTotalStockValue">0 ج</div>
+      </div>
+    </div>
+
+    <!-- TABS BAR -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('stock')">المستودع والمواد الخام</button>
+      <button class="tab-btn" onclick="switchTab('recipes')">ريسيبي الأطباق وقواعد الخصم</button>
+    </div>
+
+    <!-- TAB 1: RAW STOCK -->
+    <div class="tab-pane active" id="tab-stock">
+      <div class="controls-bar">
+        <input 
+          type="text" 
+          id="searchStock" 
+          class="search-input" 
+          placeholder="بحث في الخامات..." 
+          oninput="renderStockTable()" 
+        />
+      </div>
+
+      <div class="table-wrap">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>كود المادة</th>
+              <th>اسم الخامة</th>
+              <th>الوحدة</th>
+              <th>الكمية المتاحة</th>
+              <th>حد إعادة الطلب</th>
+              <th>متوسط تكلفة الوحدة</th>
+              <th>إجمالي القيمة</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="stockTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 2: RECIPES -->
+    <div class="tab-pane" id="tab-recipes">
+      <div class="table-wrap">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>اسم الصنف في المنيو</th>
+              <th>السعر</th>
+              <th>المكونات المربوطة بالريسيبي</th>
+              <th>تكلفة الخامات المقدرة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="recipesTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: ADD / EDIT RAW STOCK -->
+<div class="overlay" id="stockModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="stockModalTitle">إضافة مادة خام</span>
+      <button class="modal-close" onclick="closeModal('stockModal')">✕</button>
+    </div>
+    <form onsubmit="handleSaveStock(event)">
+      <input type="hidden" id="stockId" />
+
+      <div class="form-group">
+        <label>اسم المادة الخام *</label>
+        <input type="text" id="stockName" required placeholder="مثال: لحم بلدي مفروم" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>وحدة القياس *</label>
+          <select id="stockUnit">
+            <option value="كجم">كيلوجرام (كجم)</option>
+            <option value="جرام">جرام (g)</option>
+            <option value="لتر">لتر (L)</option>
+            <option value="قطعة">قطعة / حبة</option>
+            <option value="علبة">علبة / باكت</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>الكمية الحالية بالمستودع *</label>
+          <input type="number" id="stockQty" step="0.01" min="0" required />
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group">
+          <label>حد التنبيه (إعادة الطلب) *</label>
+          <input type="number" id="stockMin" step="0.01" min="0" required />
+        </div>
+        <div class="form-group">
+          <label>سعر تكلفة الوحدة (ج) *</label>
+          <input type="number" id="stockCost" step="0.5" min="0" required />
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn-action-small" onclick="closeModal('stockModal')">إلغاء</button>
+        <button type="submit" class="btn-primary">حفظ البيانات</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: RECIPE INGREDIENTS -->
+<div class="overlay" id="recipeModal">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <span class="modal-title" id="recipeModalTitle">تعديل ريسيبي الصنف</span>
+      <button class="modal-close" onclick="closeModal('recipeModal')">✕</button>
+    </div>
+    <input type="hidden" id="recipeMenuId" />
+
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+      حدد الخامات المستهلكة تلقائياً عند بيع كل وحدة من هذا الصنف:
+    </div>
+
+    <div id="recipeIngredientsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:260px;overflow-y:auto;"></div>
+
+    <button type="button" class="btn-action-small" onclick="addIngredientRow()">+ إضافة خامة للريسيبي</button>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+      <button type="button" class="btn-action-small" onclick="closeModal('recipeModal')">إلغاء</button>
+      <button type="button" class="btn-primary" onclick="saveRecipe()">حفظ الريسيبي</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('inventory.html')) {
+  // redirect
+}
+
+AuthService.renderSidebarUI();
+
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = async () => {
+  await AuthService.logout();
+};
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Seed default stock if empty
+function seedStockIfEmpty() {
+  const raw = localStorage.getItem('cs_stock');
+  if (!raw || JSON.parse(raw).length === 0) {
+    localStorage.setItem('cs_stock', JSON.stringify([
+      { id: 1, name: 'لحم كباب متبل', unit: 'كجم', qty: 24.5, min: 5, cost: 280 },
+      { id: 2, name: 'شيش دجاج متبل', unit: 'كجم', qty: 18.0, min: 4, cost: 160 },
+      { id: 3, name: 'دجاج مجهز للشوي', unit: 'قطعة', qty: 32, min: 8, cost: 75 },
+      { id: 4, name: 'أرز بسمتي', unit: 'كجم', qty: 45.0, min: 10, cost: 65 },
+      { id: 5, name: 'طماطم وخضار سلطة', unit: 'كجم', qty: 12.0, min: 3, cost: 20 },
+      { id: 6, name: 'برتقال بلدي للعصير', unit: 'كجم', qty: 2.5, min: 5, cost: 18 } // Low stock
+    ]));
+  }
+}
+seedStockIfEmpty();
+
+window.switchTab = function(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tabName).classList.add('active');
+
+  if (tabName === 'recipes') renderRecipesTable();
+};
+
+window.renderStockTable = function() {
+  const stock = JSON.parse(localStorage.getItem('cs_stock') || '[]');
+  const search = (document.getElementById('searchStock').value || '').trim().toLowerCase();
+
+  const filtered = stock.filter(s => !search || s.name.toLowerCase().includes(search));
+
+  let lowCount = 0;
+  let totalVal = 0;
+
+  stock.forEach(s => {
+    if (s.qty <= s.min) lowCount++;
+    totalVal += (s.qty * s.cost);
+  });
+
+  document.getElementById('statStockCount').textContent = stock.length;
+  document.getElementById('statLowCount').textContent = lowCount;
+  document.getElementById('statTotalStockValue').textContent = totalVal.toLocaleString('ar-EG') + ' ج';
+
+  const tbody = document.getElementById('stockTbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-muted);">لا توجد مواد خام تطابق البحث</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(s => {
+    const isLow = s.qty <= s.min;
+    const itemTotal = (s.qty * s.cost).toLocaleString('ar-EG');
+    return `
+      <tr>
+        <td><strong>RAW-${s.id}</strong></td>
+        <td><strong>${s.name}</strong></td>
+        <td>${s.unit}</td>
+        <td><strong>${s.qty}</strong></td>
+        <td>${s.min}</td>
+        <td>${s.cost} ج</td>
+        <td>${itemTotal} ج</td>
+        <td>
+          ${isLow ? `<span class="badge-low">منخفض (أعد الطلب)</span>` : `<span class="badge-ok">متوفر</span>`}
+        </td>
+        <td>
+          <button class="btn-action-small" onclick="openEditStockModal(${s.id})">تعديل</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.openAddStockModal = function() {
+  document.getElementById('stockId').value = '';
+  document.getElementById('stockModalTitle').textContent = 'إضافة مادة خام جديدة';
+  document.getElementById('stockName').value = '';
+  document.getElementById('stockQty').value = '10';
+  document.getElementById('stockMin').value = '2';
+  document.getElementById('stockCost').value = '50';
+  openModal('stockModal');
+};
+
+window.openEditStockModal = function(id) {
+  const stock = JSON.parse(localStorage.getItem('cs_stock') || '[]');
+  const s = stock.find(x => x.id == id);
+  if (!s) return;
+
+  document.getElementById('stockId').value = s.id;
+  document.getElementById('stockModalTitle').textContent = `تعديل الخامة: ${s.name}`;
+  document.getElementById('stockName').value = s.name;
+  document.getElementById('stockUnit').value = s.unit;
+  document.getElementById('stockQty').value = s.qty;
+  document.getElementById('stockMin').value = s.min;
+  document.getElementById('stockCost').value = s.cost;
+  openModal('stockModal');
+};
+
+window.handleSaveStock = function(e) {
+  e.preventDefault();
+  const idVal = document.getElementById('stockId').value;
+  const name = document.getElementById('stockName').value.trim();
+  const unit = document.getElementById('stockUnit').value;
+  const qty = parseFloat(document.getElementById('stockQty').value) || 0;
+  const min = parseFloat(document.getElementById('stockMin').value) || 0;
+  const cost = parseFloat(document.getElementById('stockCost').value) || 0;
+
+  const stock = JSON.parse(localStorage.getItem('cs_stock') || '[]');
+
+  if (idVal) {
+    const idx = stock.findIndex(x => x.id == idVal);
+    if (idx >= 0) {
+      stock[idx] = { ...stock[idx], name, unit, qty, min, cost };
+    }
+  } else {
+    const newId = stock.length > 0 ? (Math.max(...stock.map(s => s.id)) + 1) : 1;
+    stock.push({ id: newId, name, unit, qty, min, cost });
+  }
+
+  localStorage.setItem('cs_stock', JSON.stringify(stock));
+  closeModal('stockModal');
+  showToast('تم حفظ بيانات المادة الخام بنجاح');
+  renderStockTable();
+};
+
+// -------------------------------------------------------------
+// Recipes Tab
+// -------------------------------------------------------------
+window.renderRecipesTable = function() {
+  const items = JSON.parse(localStorage.getItem('cs_items') || '[]');
+  const recipes = JSON.parse(localStorage.getItem('cs_recipes') || '[]');
+  const stock = JSON.parse(localStorage.getItem('cs_stock') || '[]');
+
+  const tbody = document.getElementById('recipesTbody');
+  tbody.innerHTML = items.map(it => {
+    const rec = recipes.find(r => r.menuId == it.id);
+    let ingHtml = '—';
+    let estCost = 0;
+
+    if (rec && rec.ingredients && rec.ingredients.length > 0) {
+      ingHtml = rec.ingredients.map(ing => {
+        const raw = stock.find(s => s.id == ing.stockId);
+        const costVal = raw ? (raw.cost * ing.qty) : 0;
+        estCost += costVal;
+        return `• ${ing.name} (${ing.qty} ${ing.unit})`;
+      }).join('<br>');
+    }
+
+    return `
+      <tr>
+        <td><strong>${it.name}</strong></td>
+        <td>${it.price} ج</td>
+        <td style="font-size:12px;line-height:1.4;">${ingHtml}</td>
+        <td><strong style="color:var(--primary);">${estCost.toFixed(2)} ج</strong></td>
+        <td>
+          <button class="btn-action-small" onclick="openRecipeModal(${it.id})">ضبط المكونات</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.openRecipeModal = function(menuItemId) {
+  const items = JSON.parse(localStorage.getItem('cs_items') || '[]');
+  const it = items.find(x => x.id == menuItemId);
+  if (!it) return;
+
+  document.getElementById('recipeMenuId').value = menuItemId;
+  document.getElementById('recipeModalTitle').textContent = `ريسيبي صنف: ${it.name}`;
+
+  const recipes = JSON.parse(localStorage.getItem('cs_recipes') || '[]');
+  const rec = recipes.find(r => r.menuId == menuItemId);
+
+  const container = document.getElementById('recipeIngredientsList');
+  container.innerHTML = '';
+
+  if (rec && rec.ingredients && rec.ingredients.length > 0) {
+    rec.ingredients.forEach(ing => addIngredientRow(ing.stockId, ing.qty));
+  } else {
+    addIngredientRow();
+  }
+
+  openModal('recipeModal');
+};
+
+window.addIngredientRow = function(selectedId = '', qtyVal = '0.2') {
+  const stock = JSON.parse(localStorage.getItem('cs_stock') || '[]');
+  const container = document.getElementById('recipeIngredientsList');
+
+  const div = document.createElement('div');
+  div.className = 'ingredient-row';
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.style.alignItems = 'center';
+
+  const opts = stock.map(s => `<option value="${s.id}" ${s.id == selectedId ? 'selected':''}>${s.name} (${s.unit})</option>`).join('');
+
+  div.innerHTML = `
+    <select class="ing-select" style="flex:1;padding:6px;border:1px solid var(--border-strong);border-radius:var(--radius);font-family:inherit;font-size:12px;">
+      ${opts}
+    </select>
+    <input type="number" class="ing-qty" value="${qtyVal}" step="0.01" min="0.001" style="width:90px;padding:6px;border:1px solid var(--border-strong);border-radius:var(--radius);font-family:inherit;font-size:12px;" />
+    <button type="button" class="btn-action-small" style="color:var(--red);" onclick="this.parentElement.remove()">✕</button>
+  `;
+
+  container.appendChild(div);
+};
+
+window.saveRecipe = function() {
+  const mId = document.getElementById('recipeMenuId').value;
+  const rows = document.querySelectorAll('.ingredient-row');
+  const stock = JSON.parse(localStorage.getItem('cs_stock') || '[]');
+
+  const ingredients = [];
+  rows.forEach(r => {
+    const sId = r.querySelector('.ing-select').value;
+    const qty = parseFloat(r.querySelector('.ing-qty').value) || 0;
+    const raw = stock.find(s => s.id == sId);
+    if (raw && qty > 0) {
+      ingredients.push({
+        stockId: raw.id,
+        name: raw.name,
+        qty: qty,
+        unit: raw.unit
+      });
+    }
+  });
+
+  const recipes = JSON.parse(localStorage.getItem('cs_recipes') || '[]');
+  const idx = recipes.findIndex(r => r.menuId == mId);
+  if (idx >= 0) {
+    recipes[idx].ingredients = ingredients;
+  } else {
+    recipes.push({ menuId: parseInt(mId), ingredients });
+  }
+
+  localStorage.setItem('cs_recipes', JSON.stringify(recipes));
+  closeModal('recipeModal');
+  showToast('تم حفظ مكونات الريسيبي بنجاح');
+  renderRecipesTable();
+};
+
+// Start
+renderStockTable();
+</script>
+
+</body>
+</html>

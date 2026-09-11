@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — شاشة العميل التفاعلية</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+
+/* LEFT: BRAND & PROMOTIONS */
+.brand-side {
+  flex: 1.2;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px;
+  position: relative;
+}
+.brand-badge-large {
+  width: 64px; height: 64px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #ffffff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 900; margin-bottom: 24px;
+}
+.brand-heading {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.brand-heading span { color: var(--primary); }
+.brand-subheading {
+  font-size: 16px;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+.notice-card {
+  margin-top: 48px;
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: opacity 0.3s ease;
+}
+.notice-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: rgba(28, 105, 212, 0.08);
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+.notice-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.notice-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* RIGHT: ORDER STREAM */
+.order-side {
+  width: 500px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.order-header {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.order-title { font-size: 18px; font-weight: 800; color: var(--text); }
+.order-badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.order-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 28px;
+}
+.order-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--surface2);
+}
+.order-item-row:last-child { border-bottom: none; }
+.order-item-info { flex: 1; margin-left: 16px; }
+.order-item-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.order-item-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.order-item-qty {
+  font-size: 13px; font-weight: 700;
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: var(--radius);
+  margin-left: 16px; color: var(--text);
+}
+.order-item-price { font-size: 15px; font-weight: 800; color: var(--text); }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.order-totals {
+  padding: 24px 28px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.total-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.total-line.discount { color: var(--red); font-weight: 700; }
+.total-line.grand {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 12px;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text);
+}
+.total-line.grand .val { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<div class="brand-side">
+  <div class="brand-badge-large">CS</div>
+  <h1 class="brand-heading">أهلاً بك في <span>Cashier System</span></h1>
+  <p class="brand-subheading">نسعد بتقديم أشهى الوجبات والمشروبات المحضرة بأعلى معايير الجودة والضيافة الراقية.</p>
+
+  <div class="notice-card" id="noticeCard">
+    <span class="notice-tag" id="noticeTag">عرض اليوم</span>
+    <div class="notice-title" id="noticeTitle">وجبات ومجموعات التوفير العائلية</div>
+    <div class="notice-desc" id="noticeDesc">استمتع بخصومات مميزة على وجبات المشاركة العائلية مع تشكيلة المقبلات والمشروبات الطازجة.</div>
+  </div>
+</div>
+
+<div class="order-side">
+  <div class="order-header">
+    <span class="order-title">مراجعة الطلب الحالي</span>
+    <span class="order-badge" id="itemCount">0 أصناف</span>
+  </div>
+
+  <div class="order-items" id="itemsContainer">
+    <div class="empty-state">في انتظار تسجيل الأصناف من الكاشير...</div>
+  </div>
+
+  <div class="order-totals">
+    <div class="total-line">
+      <span>المجموع الفرعي:</span>
+      <span id="subTotalVal">0 ج</span>
+    </div>
+    <div class="total-line discount">
+      <span>قيمة الخصم:</span>
+      <span id="discountVal">0 ج</span>
+    </div>
+    <div class="total-line grand">
+      <span>المبلغ الإجمالي المستحق:</span>
+      <span class="val" id="grandTotalVal">0 ج</span>
+    </div>
+  </div>
+</div>
+
+<script>
+let bc = null;
+try {
+  bc = new BroadcastChannel('cs_order');
+  bc.onmessage = (e) => {
+    if (e.data && e.data.type === 'order_update') {
+      updateOrderUI(e.data);
+    }
+  };
+} catch(err) {
+  console.warn('BroadcastChannel not supported');
+}
+
+function updateOrderUI(data) {
+  const items = data.items || [];
+  const container = document.getElementById('itemsContainer');
+  const countEl = document.getElementById('itemCount');
+  const subTotalEl = document.getElementById('subTotalVal');
+  const discountEl = document.getElementById('discountVal');
+  const grandTotalEl = document.getElementById('grandTotalVal');
+
+  countEl.textContent = `${items.length} أصناف`;
+  subTotalEl.textContent = `${(data.subtotal || 0).toLocaleString('ar-EG')} ج`;
+  discountEl.textContent = data.discount > 0 ? `- ${(data.discount).toLocaleString('ar-EG')} ج` : '0 ج';
+  grandTotalEl.textContent = `${(data.total || 0).toLocaleString('ar-EG')} ج`;
+
+  if (items.length === 0) {
+    container.innerHTML = `<div class="empty-state">في انتظار تسجيل الأصناف من الكاشير...</div>`;
+    return;
+  }
+
+  container.innerHTML = items.map(item => `
+    <div class="order-item-row">
+      <div class="order-item-info">
+        <div class="order-item-name">${item.name}</div>
+        ${item.note ? `<div class="order-item-note">ملاحظة: ${item.note}</div>` : ''}
+      </div>
+      <span class="order-item-qty">× ${item.qty}</span>
+      <span class="order-item-price">${((item.price || 0) * (item.qty || 1)).toLocaleString('ar-EG')} ج</span>
+    </div>
+  `).join('');
+}
+
+// Announcements Carousel
+const NOTICES = [
+  { tag: 'عرض اليوم', title: 'وجبات ومجموعات التوفير العائلية', desc: 'استمتع بخصومات مميزة على وجبات المشاركة العائلية مع تشكيلة المقبلات والمشروبات الطازجة.' },
+  { tag: 'خدمة العملاء', title: 'خدمة التوصيل السريع للمنازل', desc: 'نصلك أينما كنت بأعلى سرعة وأفضل جودة تغليف للحفاظ على سخونة الوجبات.' },
+  { tag: 'جودة وطزاجة', title: 'مكونات طبيعية 100% يوميًا', desc: 'نختار أجود أنواع اللحوم والخضروات الطازجة المحضرة يوميًا في مطابخنا.' }
+];
+
+let nIdx = 0;
+setInterval(() => {
+  nIdx = (nIdx + 1) % NOTICES.length;
+  const item = NOTICES[nIdx];
+  const card = document.getElementById('noticeCard');
+  card.style.opacity = 0;
+  setTimeout(() => {
+    document.getElementById('noticeTag').textContent = item.tag;
+    document.getElementById('noticeTitle').textContent = item.title;
+    document.getElementById('noticeDesc').textContent = item.desc;
+    card.style.opacity = 1;
+  }, 300);
+}, 6000);
+</script>
+
+</body>
+</html>

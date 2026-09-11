@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الكاشير — سجل الرقابة والتدقيق الأمني</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:        #ffffff;
+  --surface:   #f8fafc;
+  --surface2:  #f1f5f9;
+  --border:    #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary:   #1c69d4;
+  --primary-hover: #1555ab;
+  --green:     #16a34a;
+  --red:       #dc2626;
+  --orange:    #ea580c;
+  --text:      #1e293b;
+  --text-muted:#64748b;
+  --radius:    4px;
+  --sidebar-w: 240px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.sidebar-logo {
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-badge {
+  width: 36px; height: 36px;
+  background: var(--primary);
+  border-radius: var(--radius);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.sidebar-logo .name { font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--text); }
+.sidebar-logo .name span { color: var(--primary); }
+.sidebar-logo .ver { font-size: 11px; color: var(--text-muted); }
+
+.sidebar-user {
+  padding: 12px 14px; margin: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #e2e8f0; color: #334155; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; flex-shrink: 0;
+}
+.user-info .uname { font-size: 13px; font-weight: 700; color: var(--text); }
+.user-info .urole {
+  font-size: 11px; color: var(--primary);
+  background: rgba(28, 105, 212, .08);
+  padding: 1px 6px; border-radius: var(--radius);
+  display: inline-block; margin-top: 2px; font-weight: 600;
+}
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 6px 0; }
+.nav-section-title {
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  letter-spacing: .5px; padding: 12px 18px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 18px;
+  cursor: pointer; transition: background .15s, color .15s;
+  color: var(--text-muted); font-size: 13px; font-weight: 700;
+  text-decoration: none; border: none; background: none;
+  width: 100%; text-align: right; font-family: inherit;
+}
+.nav-item:hover { background: #f1f5f9; color: var(--text); }
+.nav-item.active {
+  background: rgba(28, 105, 212, 0.08) !important;
+  color: var(--primary) !important;
+  border-right: 3px solid var(--primary) !important;
+}
+
+.sidebar-footer { padding: 14px 18px; border-top: 1px solid var(--border); }
+.btn-logout {
+  width: 100%; padding: 9px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--radius); color: var(--red);
+  font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.btn-logout:hover { background: #fee2e2; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  margin-right: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.content { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-title { font-size: 12px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px; }
+.stat-val { font-size: 20px; font-weight: 800; color: var(--text); }
+
+/* CONTROLS */
+.controls-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.filters-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-muted);
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+}
+.filter-btn.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.search-input {
+  padding: 7px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 13px; color: var(--text);
+  background: #ffffff; width: 220px;
+}
+
+.btn-danger {
+  padding: 7px 14px;
+  background: var(--red);
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit; font-size: 12px; font-weight: 700; color: #ffffff;
+  cursor: pointer;
+}
+.btn-danger:hover { background: #b91c1c; }
+
+/* TABLE */
+.table-wrap {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+table.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: right;
+}
+table.custom-table th {
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+table.custom-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+table.custom-table tr:hover td { background: var(--surface2); }
+
+.badge-action {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge-action.delete { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.badge-action.discount { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.badge-action.officer { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-action.general { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+
+/* MODALS */
+.overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(15, 23, 42, 0.6);
+  align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 440px; max-width: 95vw;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+}
+.modal-title { font-size: 16px; font-weight: 800; color: var(--text); }
+.modal-close { background: none; border: none; font-size: 18px; color: var(--text-muted); cursor: pointer; }
+
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #1e293b; color: #ffffff; padding: 10px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 700; display: none; z-index: 200;
+}
+.toast.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand-badge">CS</div>
+    <div>
+      <div class="name">Cashier<span>System</span></div>
+      <div class="ver">إصدار المؤسسة v2.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">U</div>
+    <div class="user-info">
+      <div class="uname" id="userName">المستخدم</div>
+      <div class="urole" id="userRole">الدور</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">الرئيسية</div>
+    <button class="nav-item" onclick="navigate('dashboard.html')">لوحة التحكم</button>
+
+    <div class="nav-section-title">المبيعات والصالة</div>
+    <button class="nav-item" onclick="navigate('pos.html')">الكاشير (POS)</button>
+    <button class="nav-item" onclick="navigate('tables.html')">إدارة الطاولات</button>
+    <button class="nav-item" onclick="navigate('orders.html')">سجل الفواتير</button>
+    <button class="nav-item" onclick="navigate('delivery.html')">طلبات الديليفري</button>
+
+    <div class="nav-section-title">المخازن والمشتريات</div>
+    <button class="nav-item" onclick="navigate('inventory.html')">المخزون والمواد الخام</button>
+
+    <div class="nav-section-title">المالية والحسابات</div>
+    <button class="nav-item" onclick="navigate('accounts.html')">الحسابات اليومية</button>
+    <button class="nav-item" onclick="navigate('expenses.html')">المصروفات والعهد</button>
+
+    <div class="nav-section-title">الأشخاص والأمان</div>
+    <button class="nav-item" onclick="navigate('crm.html')">العملاء والموردين</button>
+    <button class="nav-item active" onclick="navigate('guard.html')">سجل الرقابة والتتبع</button>
+    <button class="nav-item" onclick="navigate('settings.html')">إعدادات النظام</button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">سجل الرقابة والتدقيق الأمني وتتبع الحركات الحساسة</span>
+    <div class="topbar-right">
+      <button class="btn-danger" onclick="openResetGuardModal()">تصفير سجل الرقابة</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">إجمالي الحركات المسجلة</div>
+        <div class="stat-val" id="statTotalLogs">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">قيمة الفواتير المحذوفة / الملغاة</div>
+        <div class="stat-val" style="color:var(--red);" id="statDeletedVal">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">قيمة الخصومات والتعديلات</div>
+        <div class="stat-val" style="color:var(--orange);" id="statDiscountVal">0 ج</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">قيمة طلبات الأوفيسير والضيافة</div>
+        <div class="stat-val" style="color:var(--primary);" id="statSpecialVal">0 ج</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+      <div class="filters-group">
+        <button class="filter-btn active" id="f-all" onclick="setLogFilter('all')">الكل</button>
+        <button class="filter-btn" id="f-delete" onclick="setLogFilter('delete')">حذف فواتير</button>
+        <button class="filter-btn" id="f-discount" onclick="setLogFilter('discount')">خصومات</button>
+        <button class="filter-btn" id="f-officer" onclick="setLogFilter('officer')">أوفيسير وضيافة</button>
+      </div>
+
+      <input 
+        type="text" 
+        id="searchLogs" 
+        class="search-input" 
+        placeholder="بحث بالمستخدم أو الحدث..." 
+        oninput="renderLogsTable()" 
+      />
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>التاريخ والوقت</th>
+            <th>المستخدم والدور</th>
+            <th>نوع الحركة</th>
+            <th>تفاصيل الحدث وسياق الإجراء</th>
+            <th>القيمة المالية المرتبطة</th>
+          </tr>
+        </thead>
+        <tbody id="logsTbody"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: RESET GUARD -->
+<div class="overlay" id="resetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">تأكيد تصفير سجل التدقيق والرقابة</span>
+      <button class="modal-close" onclick="closeModal('resetModal')">✕</button>
+    </div>
+    <form onsubmit="handleConfirmReset(event)">
+      <div style="font-size:13px;color:var(--red);margin-bottom:12px;line-height:1.5;">
+        تحذير: هذه العملية ستقوم بأرشفة وتصفير كافة سجلات الرقابة ولا يمكن التراجع عنها. يلزم إدخال كلمة سر المدير للتأكيد.
+      </div>
+      <div class="form-group">
+        <label>كلمة مرور المسؤول (admin)</label>
+        <input type="password" id="adminPassInput" required style="width:100%;padding:8px 12px;border:1px solid var(--border-strong);border-radius:var(--radius);" />
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" class="btn-danger" style="background:#ffffff;color:var(--text);border:1px solid var(--border-strong);" onclick="closeModal('resetModal')">إلغاء</button>
+        <button type="submit" class="btn-danger">تأكيد المسح والتصفير</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import AuthService from './auth.js';
+
+// Enforce RBAC
+if (!AuthService.enforcePage('guard.html')) {
+  // redirect
+}
+
+AuthService.renderSidebarUI();
+
+window.navigate = (p) => window.location.href = p;
+window.handleLogout = async () => {
+  await AuthService.logout();
+};
+window.openModal = (id) => document.getElementById(id).classList.add('open');
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Seed sample guard events if empty
+function seedGuardIfEmpty() {
+  const raw = localStorage.getItem('cs_guard_logs');
+  if (!raw || JSON.parse(raw).length === 0) {
+    localStorage.setItem('cs_guard_logs', JSON.stringify([
+      {
+        id: 'log-1',
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        user: 'أحمد الإداري',
+        role: 'manager',
+        action: 'تطبيق خصم',
+        details: 'تم تطبيق خصم بقيمة 20 ج على الفاتورة #1002',
+        value: 20
+      },
+      {
+        id: 'log-2',
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        user: 'المدير العام',
+        role: 'admin',
+        action: 'طلب أوفيسير',
+        details: 'إصدار طلب ضيافة موظفين معفى من الدفع بقيمة 110 ج',
+        value: 110
+      }
+    ]));
+  }
+}
+seedGuardIfEmpty();
+
+let currentLogFilter = 'all';
+
+window.setLogFilter = function(filter) {
+  currentLogFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('f-' + filter);
+  if (btn) btn.classList.add('active');
+  renderLogsTable();
+};
+
+window.renderLogsTable = function() {
+  const logs = JSON.parse(localStorage.getItem('cs_guard_logs') || '[]');
+  const search = (document.getElementById('searchLogs').value || '').trim().toLowerCase();
+
+  const filtered = logs.filter(l => {
+    let matchType = true;
+    if (currentLogFilter === 'delete') matchType = l.action.includes('حذف') || l.action.includes('إلغاء');
+    else if (currentLogFilter === 'discount') matchType = l.action.includes('خصم');
+    else if (currentLogFilter === 'officer') matchType = l.action.includes('أوفيسير') || l.action.includes('ضيافة');
+
+    const matchSearch = !search ||
+      (l.user || '').toLowerCase().includes(search) ||
+      (l.action || '').toLowerCase().includes(search) ||
+      (l.details || '').toLowerCase().includes(search);
+
+    return matchType && matchSearch;
+  }).reverse();
+
+  // Metrics
+  const totalLogs = logs.length;
+  const deletedVal = logs.filter(l => l.action.includes('حذف') || l.action.includes('إلغاء')).reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0);
+  const discountVal = logs.filter(l => l.action.includes('خصم') && !l.action.includes('أوفيسير')).reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0);
+  const specialVal = logs.filter(l => l.action.includes('أوفيسير') || l.action.includes('ضيافة')).reduce((sum, l) => sum + (parseFloat(l.value) || 0), 0);
+
+  document.getElementById('statTotalLogs').textContent = totalLogs;
+  document.getElementById('statDeletedVal').textContent = deletedVal.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('statDiscountVal').textContent = discountVal.toLocaleString('ar-EG') + ' ج';
+  document.getElementById('statSpecialVal').textContent = specialVal.toLocaleString('ar-EG') + ' ج';
+
+  const tbody = document.getElementById('logsTbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">لا توجد حركات تدقيق مطابقة للتصفية</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(l => {
+    let badgeClass = 'general';
+    if (l.action.includes('حذف') || l.action.includes('إلغاء')) badgeClass = 'delete';
+    else if (l.action.includes('خصم')) badgeClass = 'discount';
+    else if (l.action.includes('أوفيسير') || l.action.includes('ضيافة')) badgeClass = 'officer';
+
+    const timeStr = l.timestamp ? new Date(l.timestamp).toLocaleString('ar-EG', {
+      month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }) : '—';
+
+    return `
+      <tr>
+        <td style="font-size:12px;color:var(--text-muted);white-space:nowrap;">${timeStr}</td>
+        <td>
+          <div style="font-weight:700;">${l.user}</div>
+          <div style="font-size:11px;color:var(--primary);">${l.role || 'موظف'}</div>
+        </td>
+        <td><span class="badge-action ${badgeClass}">${l.action}</span></td>
+        <td style="font-size:12px;line-height:1.4;">${l.details}</td>
+        <td>
+          <strong style="color:${l.value > 0 ? (badgeClass === 'delete' ? 'var(--red)' : 'var(--primary)') : 'var(--text-muted)'};">
+            ${l.value > 0 ? (l.value).toLocaleString('ar-EG') + ' ج' : '—'}
+          </strong>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
+window.openResetGuardModal = function() {
+  const session = AuthService.getSession();
+  if (session && session.role !== 'admin') {
+    alert('صلاحية تصفير سجلات الرقابة خاصة بالمالك (Admin) فقط!');
+    return;
+  }
+  document.getElementById('adminPassInput').value = '';
+  openModal('resetModal');
+};
+
+window.handleConfirmReset = function(e) {
+  e.preventDefault();
+  const pass = document.getElementById('adminPassInput').value.trim();
+  const session = AuthService.getSession();
+
+  if (pass === 'admin' || pass === '1234') {
+    const freshLogs = [{
+      id: 'reset-' + Date.now(),
+      timestamp: new Date().toISOString(),
+      user: session ? (session.name || session.username) : 'المالك',
+      role: 'admin',
+      action: 'تصفير السجل',
+      details: 'قام المالك بتصفير سجلات الرقابة والتدقيق الأمني بنجاح',
+      value: 0
+    }];
+    localStorage.setItem('cs_guard_logs', JSON.stringify(freshLogs));
+    closeModal('resetModal');
+    showToast('تم تصفير سجل التدقيق الأمني بنجاح');
+    renderLogsTable();
+  } else {
+    alert('كلمة مرور الإدارة غير صحيحة');
+  }
+};
+
+// Start
+renderLogsTable();
+</script>
+
+</body>
+</html>
