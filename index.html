@@ -204,7 +204,7 @@
     <p class="brand-desc">نظام المبيعات وإدارة العمليات المؤسسي</p>
   </div>
 
-  <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+  <form id="loginForm" onsubmit="event.preventDefault(); window.handleLoginSubmit && window.handleLoginSubmit(event);">
     <div class="form-group">
       <label for="usernameInput">اسم المستخدم أو البريد الإلكتروني</label>
       <div class="input-wrap">
@@ -246,6 +246,13 @@
   </div>
 </div>
 
+<script>
+  // Prevent any fallback submission from reloading the page
+  window.handleLoginSubmit = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+  };
+</script>
+
 <script type="module">
   import AuthService, { ROLE_HOME_PAGES } from './auth.js';
 
@@ -271,7 +278,7 @@
 
   // Login Submit Handler
   window.handleLoginSubmit = async function(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const identifier = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
     const errorBox = document.getElementById('errorBox');
@@ -294,7 +301,7 @@
       const targetHome = ROLE_HOME_PAGES[session.role] || 'dashboard.html';
       setTimeout(() => {
         window.location.href = targetHome;
-      }, 400);
+      }, 300);
     } catch (err) {
       submitBtn.disabled = false;
       btnText.textContent = 'تسجيل الدخول';
@@ -304,6 +311,12 @@
       errorBox.classList.add('show');
     }
   };
+
+  // Ensure form submit listener is firmly attached
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    loginForm.addEventListener('submit', window.handleLoginSubmit);
+  }
 </script>
 
 </body>

@@ -1,25 +1,6 @@
 // ============================================================
 //  Firebase Authentication & Central RBAC Security System
 // ============================================================
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword 
-} from "firebase/auth";
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  getDocs, 
-  collection, 
-  query, 
-  where 
-} from "firebase/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -33,24 +14,39 @@ const firebaseConfig = {
   measurementId: "G-4WZSQFM2XZ"
 };
 
-// Initialize Firebase
+// Initialize Firebase dynamically via official CDN to prevent bare module specifier failures
 let app = null;
 let analytics = null;
 let auth = null;
 let db = null;
+let fbAuth = null;
+let fbFirestore = null;
 
-try {
-  app = initializeApp(firebaseConfig);
+export const loadFirebasePromise = (async () => {
+  if (app) return { app, auth, db, fbAuth, fbFirestore };
   try {
-    analytics = getAnalytics(app);
-  } catch (e) {
-    // Analytics is optional in sandbox
+    const fbAppModule = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+    app = fbAppModule.initializeApp(firebaseConfig);
+
+    try {
+      const fbAnalyticsModule = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js");
+      analytics = fbAnalyticsModule.getAnalytics(app);
+    } catch (e) {
+      // Analytics is optional in sandbox
+    }
+
+    fbAuth = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js");
+    auth = fbAuth.getAuth(app);
+
+    fbFirestore = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+    db = fbFirestore.getFirestore(app);
+
+    return { app, auth, db, fbAuth, fbFirestore };
+  } catch (err) {
+    console.warn("Firebase CDN initialization notice (offline/standalone mode fallback active):", err);
+    return null;
   }
-  auth = getAuth(app);
-  db = getFirestore(app);
-} catch (err) {
-  console.warn("Firebase initialization notice:", err);
-}
+})();
 
 // ============================================================
 //  Role Definitions & Page Permissions
@@ -335,9 +331,9 @@ export const AuthService = {
     } catch (e) {
       console.warn("Session clear warning:", e);
     }
-    if (auth && auth.currentUser) {
+    if (auth && auth.currentUser && fbAuth) {
       try {
-        await signOut(auth);
+        await fbAuth.signOut(auth);
       } catch (err) {
         console.warn("Firebase signout notice:", err);
       }
@@ -352,9 +348,9 @@ export const AuthService = {
     } catch (e) {
       console.warn("Session clear warning:", e);
     }
-    if (auth && auth.currentUser) {
+    if (auth && auth.currentUser && fbAuth) {
       try {
-        signOut(auth).catch(() => {});
+        await fbAuth.signOut(auth);
       } catch (err) {
         console.warn("Firebase signout notice:", err);
       }
@@ -371,6 +367,11 @@ export const AuthService = {
       throw new Error('يرجى إدخال اسم المستخدم/البريد الإلكتروني وكلمة المرور');
     }
 
+    // Await Firebase initialization if still in flight
+    try {
+      await loadFirebasePromise;
+    } catch (e) {}
+
     const users = AuthService.getUsers();
     let matchedUser = null;
     let firebaseUser = null;
@@ -379,21 +380,21 @@ export const AuthService = {
     const isMahmoudTarget = cleanId === 'mahmoud.mostfa@app.com' || cleanId === 'mahmoud.mostfa';
 
     // 1. If identifier looks like an email and Firebase auth is ready, try Firebase Auth
-    if (cleanId.includes('@') && auth) {
+    if (cleanId.includes('@') && auth && fbAuth) {
       try {
-        const cred = await signInWithEmailAndPassword(auth, cleanId, cleanPass);
+        const cred = await fbAuth.signInWithEmailAndPassword(auth, cleanId, cleanPass);
         firebaseUser = cred.user;
 
         // Fetch user document from Firestore
-        if (db) {
+        if (db && fbFirestore) {
           try {
             // Check by Firebase Auth UID
-            const userDocSnap = await getDoc(doc(db, 'users', firebaseUser.uid));
+            const userDocSnap = await fbFirestore.getDoc(fbFirestore.doc(db, 'users', firebaseUser.uid));
             if (userDocSnap.exists()) {
               firestoreDocData = userDocSnap.data();
             } else {
-              // Check by document ID shown in console: 3SNhsc2ilvc42YWXhKpLzBO5Yu32
-              const specDocSnap = await getDoc(doc(db, 'users', '3SNhsc2ilvc42YWXhKpLzBO5Yu32'));
+              // Check by document ID: 3SNhsc2ilvc42YWXhKpLzBO5Yu32
+              const specDocSnap = await fbFirestore.getDoc(fbFirestore.doc(db, 'users', '3SNhsc2ilvc42YWXhKpLzBO5Yu32'));
               if (specDocSnap.exists()) {
                 const sData = specDocSnap.data();
                 if ((sData.email || '').toLowerCase() === cleanId || isMahmoudTarget) {
@@ -402,8 +403,8 @@ export const AuthService = {
               }
               // Check by email query
               if (!firestoreDocData) {
-                const q = query(collection(db, 'users'), where('email', '==', cleanId));
-                const qSnap = await getDocs(q);
+                const q = fbFirestore.query(fbFirestore.collection(db, 'users'), fbFirestore.where('email', '==', cleanId));
+                const qSnap = await fbFirestore.getDocs(q);
                 if (!qSnap.empty) {
                   firestoreDocData = qSnap.docs[0].data();
                 }
@@ -514,9 +515,9 @@ export const AuthService = {
 
     let firebaseUid = null;
     // Attempt Firebase User creation if email and auth exist
-    if (auth && cleanEmail.includes('@')) {
+    if (auth && fbAuth && cleanEmail.includes('@')) {
       try {
-        const userCred = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+        const userCred = await fbAuth.createUserWithEmailAndPassword(auth, cleanEmail, password);
         firebaseUid = userCred.user.uid;
       } catch (err) {
         console.warn("Firebase user registration notice:", err.message);
@@ -1074,10 +1075,13 @@ export const TableManager = {
 
 // Sync Admin and Firestore users into local storage
 export async function syncFirestoreUsers() {
-  if (!db) return;
   try {
-    const adminDocRef = doc(db, 'users', '3SNhsc2ilvc42YWXhKpLzBO5Yu32');
-    const adminSnap = await getDoc(adminDocRef);
+    await loadFirebasePromise;
+  } catch (e) {}
+  if (!db || !fbFirestore) return;
+  try {
+    const adminDocRef = fbFirestore.doc(db, 'users', '3SNhsc2ilvc42YWXhKpLzBO5Yu32');
+    const adminSnap = await fbFirestore.getDoc(adminDocRef);
     const users = AuthService.getUsers();
     let modified = false;
 
