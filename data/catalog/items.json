@@ -11,4 +11,5 @@
   { "id": 10, "name": "مياه معدنية",               "price": 10, "catId": 3, "code": "D03", "available": true },
   { "id": 11, "name": "أم علي بالمكسرات",          "price": 35, "catId": 4, "code": "S01", "available": true },
   { "id": 12, "name": "كنافة نابلسية بالجبن",       "price": 45, "catId": 4, "code": "S02", "available": true }
+  { "id": 12, "name": "كنافة بتنجان بالجبن",       "price": 65, "catId": 4, "code": "S03", "available": true }
 ]
