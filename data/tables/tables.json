@@ -6,7 +6,7 @@
   { "id": 5, "number": "VIP 2", "zone": "الكابينة الفاخرة", "seats": "6 مقاعد", "status": "available", "currentSession": null, "reservation": null, "total": 0, "waiter": "—" },
   { "id": 6, "number": "T 1",   "zone": "التراس الخارجي",   "seats": "2 مقعد",  "status": "available", "currentSession": null, "reservation": null, "total": 0, "waiter": "—" },
   { "id": 7, "number": "T 2",   "zone": "التراس الخارجي",   "seats": "4 مقاعد", "status": "available", "currentSession": null, "reservation": null, "total": 0, "waiter": "—" },
-  { "id": 8, "number": "T 3",   "zone": "التراس الخارجي",   "seats": "4 مقاعد", "status": "available", "currentSession": null, "reservation": null, "total": 0, "waiter": "—" },
+  { "id": 8, "number": "T 3",   "zone": "طياز الخارجي",   "seats": "4 مقاعد", "status": "available", "currentSession": null, "reservation": null, "total": 0, "waiter": "—" },
   {
     "id": 12,
     "number": "12",
