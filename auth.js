@@ -744,6 +744,17 @@ export const TABLE_STATUS_LABELS = {
   cleaning: 'قيد التنظيف'
 };
 
+// محاولة تحميل تخطيط الطاولات المرجعي من data/tables/tables.json.
+// لو فشل التحميل (مثلاً وضع offline بدون سيرفر)، بيتم الرجوع لنسخة
+// احتياطية مدمجة (DEFAULT_TABLES) في نفس الملف كخط دفاع أخير.
+let TABLES_SEED = null;
+try {
+  const res = await fetch('./data/tables/tables.json', { cache: 'no-store' });
+  if (res.ok) TABLES_SEED = await res.json();
+} catch (e) {
+  // هنستخدم DEFAULT_TABLES تحت كنسخة احتياطية
+}
+
 const DEFAULT_TABLES = [
   { id: 1, number: '1', zone: 'صالة العوائل', seats: '4 مقاعد', status: 'available', currentSession: null, reservation: null, total: 0, waiter: '—' },
   { id: 2, number: '2', zone: 'صالة العوائل', seats: '6 مقاعد', status: 'available', currentSession: null, reservation: null, total: 0, waiter: '—' },
@@ -778,8 +789,18 @@ export const TableManager = {
   getTables: () => {
     let raw = localStorage.getItem('cs_tables');
     if (!raw) {
-      localStorage.setItem('cs_tables', JSON.stringify(DEFAULT_TABLES));
-      return DEFAULT_TABLES;
+      // اتزرعت من data/tables/tables.json لو نجح تحميلها فوق، وإلا
+      // بنستخدم النسخة الاحتياطية المدمجة DEFAULT_TABLES
+      const seed = (TABLES_SEED && TABLES_SEED.length > 0) ? TABLES_SEED : DEFAULT_TABLES;
+      // تطبيع تواريخ الحجز الفارغة (null من ملف البيانات) على تاريخ اليوم
+      seed.forEach(t => {
+        if (t.reservation) {
+          if (!t.reservation.date) t.reservation.date = new Date().toISOString().split('T')[0];
+          if (!t.reservation.createdAt) t.reservation.createdAt = new Date().toISOString();
+        }
+      });
+      localStorage.setItem('cs_tables', JSON.stringify(seed));
+      return seed;
     }
     let tables = JSON.parse(raw);
     // Normalize status names from legacy ('free' -> 'available', 'busy' -> 'occupied')

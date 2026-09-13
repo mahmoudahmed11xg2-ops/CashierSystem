@@ -581,6 +581,11 @@ table.custom-table tr:hover td { background: var(--surface2); }
 
 <script type="module">
 import AuthService from './auth.js';
+import DataService from './js/dataService.js';
+
+// تحميل بيانات العملاء والموردين والطيارين والموظفين من data/
+// وزرعها في الكاش المحلي لو أول مرة
+await DataService.init(['customers', 'suppliers', 'captains', 'staff']);
 
 // Enforce RBAC
 if (!AuthService.enforcePage('crm.html')) {
@@ -603,42 +608,9 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Seed initial data if empty
-function seedCRMIfEmpty() {
-  if (!localStorage.getItem('cs_customers')) {
-    localStorage.setItem('cs_customers', JSON.stringify([
-      { id: 1, name: 'أحمد محمود', phone: '01012345678', address: 'الحي الثاني، شارع الجامعة', ordersCount: 5 },
-      { id: 2, name: 'سارة إبراهيم', phone: '01298765432', address: 'الحي الرابع، عمارة 12', ordersCount: 3 },
-      { id: 3, name: 'م/ طارق عبد الله', phone: '01155443322', address: 'المجاورة الخامسة، فيلا 8', ordersCount: 11 }
-    ]));
-  }
-
-  if (!localStorage.getItem('cs_suppliers')) {
-    localStorage.setItem('cs_suppliers', JSON.stringify([
-      { id: 1, name: 'شركة البركة للحوم الطازجة', category: 'لحوم بلدي مجمدة ومتبلة', phone: '01000112233', balance: 14500 },
-      { id: 2, name: 'مزارع الدواجن الحديثة', category: 'دواجن وبانيه وشيش', phone: '01222334455', balance: 6200 },
-      { id: 3, name: 'مؤسسة الأهرام للتعبئة والتغليف', category: 'كرتون وأطباق فويل وأكياس', phone: '01111223344', balance: 2100 }
-    ]));
-  }
-
-  if (!localStorage.getItem('cs_captains')) {
-    localStorage.setItem('cs_captains', JSON.stringify([
-      { id: 1, name: 'كريم صبحي', phone: '01099887766', vehicle: 'موتوسيكل دايون 4', commission: 15, status: 'free' },
-      { id: 2, name: 'أحمد سامي', phone: '01288776655', vehicle: 'سكوتر حوا مارين', commission: 15, status: 'free' },
-      { id: 3, name: 'محمود رضا', phone: '01177665544', vehicle: 'دراجة نارية بوكسر', commission: 15, status: 'busy' }
-    ]));
-  }
-
-  if (!localStorage.getItem('cs_staff')) {
-    localStorage.setItem('cs_staff', JSON.stringify([
-      { id: 1, name: 'مصطفى حسين', role: 'ويتر صالة', phone: '01066554433', salary: 4500 },
-      { id: 2, name: 'سامح فوزي', role: 'ويتر صالة', phone: '01255443322', salary: 4500 },
-      { id: 3, name: 'شيف حسام النجار', role: 'شيف / طباخ', phone: '01144332211', salary: 9000 },
-      { id: 4, name: 'عبد الرحمن علي', role: 'كابتن صالة', phone: '01533221100', salary: 6000 }
-    ]));
-  }
-}
-seedCRMIfEmpty();
+// ملاحظة: بيانات العملاء/الموردين/الطيارين/الموظفين بقت تُزرع من
+// data/crm/*.json عن طريق DataService.init(...) فوق، بدل ما كانت
+// مكتوبة مباشرة هنا. الكاش المحلي (localStorage) لسه بنفس المفاتيح.
 
 window.switchTab = function(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

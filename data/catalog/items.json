@@ -1,0 +1,14 @@
+[
+  { "id": 1,  "name": "كباب مشكل",               "price": 95, "catId": 1, "code": "K01", "available": true },
+  { "id": 2,  "name": "شيش طاووق",                "price": 75, "catId": 1, "code": "K02", "available": true },
+  { "id": 3,  "name": "فراخ مشوية على الفحم",      "price": 90, "catId": 1, "code": "K03", "available": true },
+  { "id": 4,  "name": "حمام محشي أرز",             "price": 80, "catId": 1, "code": "K04", "available": true },
+  { "id": 5,  "name": "سلطة خضراء",                "price": 25, "catId": 2, "code": "M01", "available": true },
+  { "id": 6,  "name": "متبل باذنجان",              "price": 20, "catId": 2, "code": "M02", "available": true },
+  { "id": 7,  "name": "حمص بالشامي",               "price": 20, "catId": 2, "code": "M03", "available": true },
+  { "id": 8,  "name": "عصير برتقال فريش",          "price": 25, "catId": 3, "code": "D01", "available": true },
+  { "id": 9,  "name": "شاي تلقيمة بالنعناع",        "price": 15, "catId": 3, "code": "D02", "available": true },
+  { "id": 10, "name": "مياه معدنية",               "price": 10, "catId": 3, "code": "D03", "available": true },
+  { "id": 11, "name": "أم علي بالمكسرات",          "price": 35, "catId": 4, "code": "S01", "available": true },
+  { "id": 12, "name": "كنافة نابلسية بالجبن",       "price": 45, "catId": 4, "code": "S02", "available": true }
+]

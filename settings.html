@@ -437,6 +437,11 @@ body {
 
 <script type="module">
 import AuthService from './auth.js';
+import DataService from './js/dataService.js';
+
+// تحميل الإعدادات الافتراضية للمحل من data/ وزرعها في الكاش المحلي
+// لو أول مرة (بدل الأرقام الثابتة اللي كانت هنا قبل كده)
+await DataService.init(['storeConfig']);
 
 // Enforce RBAC
 if (!AuthService.enforcePage('settings.html')) {
@@ -460,17 +465,21 @@ function showToast(msg) {
 }
 
 // Load configurations
+// ملاحظة: القيم الافتراضية بقت في data/settings/store-config.json
+// وبتتزرع في cs_configs عن طريق DataService.init(['storeConfig'])
+// فوق، فمعظم القيم الحرفية اللي كانت هنا اتشالت. لسه سايبين حد أدنى
+// (فاضي/صفر) كحماية بس في حالة فشل تحميل ملف البيانات لأي سبب.
 function loadSettings() {
   const cfg = JSON.parse(localStorage.getItem('cs_configs') || '{}');
-  document.getElementById('cfgStoreName').value = cfg.storeName || 'Cashier System Restaurant';
-  document.getElementById('cfgStorePhone').value = cfg.storePhone || '01000000000';
-  document.getElementById('cfgStoreAddress').value = cfg.storeAddress || 'شارع النصر الرئيسي';
-  document.getElementById('cfgTax').value = cfg.tax !== undefined ? cfg.tax : 14;
-  document.getElementById('cfgDeliveryFee').value = cfg.deliveryFee !== undefined ? cfg.deliveryFee : 15;
+  document.getElementById('cfgStoreName').value = cfg.storeName || '';
+  document.getElementById('cfgStorePhone').value = cfg.storePhone || '';
+  document.getElementById('cfgStoreAddress').value = cfg.storeAddress || '';
+  document.getElementById('cfgTax').value = cfg.tax !== undefined ? cfg.tax : 0;
+  document.getElementById('cfgDeliveryFee').value = cfg.deliveryFee !== undefined ? cfg.deliveryFee : 0;
 
   document.getElementById('cfgPaperWidth').value = cfg.paperWidth || '80mm';
   document.getElementById('cfgAutoPrint').value = cfg.autoPrint || 'enabled';
-  document.getElementById('cfgReceiptFooter').value = cfg.receiptFooter || 'شكرًا لزيارتكم ونسعد بخدمتكم دائمًا!';
+  document.getElementById('cfgReceiptFooter').value = cfg.receiptFooter || '';
 }
 
 window.handleSaveStoreProfile = function(e) {

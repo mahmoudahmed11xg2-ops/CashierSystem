@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": 1,
+  "lastUpdated": "2026-09-13T00:00:00Z",
+  "source": "local",
+  "notes": "هذا الملف مرجع مركزي لكل ملفات بيانات النظام. عند ربط مجلد data بمستودع GitHub لاحقًا، سيُستخدم هذا الملف لمقارنة نسخة البيانات المحلية بالنسخة الموجودة على GitHub، ولتحديد أي ملفات تغيّرت فعليًا بدلًا من تنزيل كل شيء في كل مرة.",
+  "files": [
+    { "domain": "categories",  "path": "catalog/categories.json",     "description": "أقسام المنيو (مشويات، مشروبات...)" },
+    { "domain": "items",       "path": "catalog/items.json",          "description": "الأصناف والمنتجات وأسعارها" },
+    { "domain": "recipes",     "path": "catalog/recipes.json",        "description": "ربط كل صنف بمكوناته من المخزون (BOM)" },
+    { "domain": "stock",       "path": "inventory/stock.json",        "description": "المواد الخام وكمياتها وحد الأمان" },
+    { "domain": "tables",      "path": "tables/tables.json",          "description": "خريطة الصالة والطاولات والمناطق" },
+    { "domain": "customers",   "path": "crm/customers.json",          "description": "بيانات العملاء" },
+    { "domain": "suppliers",   "path": "crm/suppliers.json",          "description": "بيانات الموردين وأرصدتهم" },
+    { "domain": "captains",    "path": "crm/captains.json",           "description": "بيانات مناديب التوصيل" },
+    { "domain": "staff",       "path": "crm/staff.json",              "description": "بيانات العاملين والموظفين" },
+    { "domain": "storeConfig", "path": "settings/store-config.json",  "description": "بيانات المحل الافتراضية وإعدادات الطباعة" }
+  ]
+}

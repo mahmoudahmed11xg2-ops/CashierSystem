@@ -670,6 +670,11 @@ body {
 
 <script type="module">
 import AuthService, { TableManager, TABLE_STATUS, TABLE_STATUS_LABELS } from './auth.js';
+import DataService from './js/dataService.js';
+
+// تحميل بيانات الأقسام والأصناف من data/ وزرعها في الكاش المحلي
+// لو أول مرة (بدل الأرقام الثابتة اللي كانت هنا قبل كده)
+await DataService.init(['categories', 'items']);
 
 // Enforce RBAC
 if (!AuthService.enforcePage('pos.html')) {
@@ -721,34 +726,10 @@ let activeCat = 'all';
 let order = []; // [{ itemId, name, price, qty, note }]
 let payMethod = 'cash';
 
-// Seed menu data if empty
-function seedMenuIfEmpty() {
-  if (DB.getCats().length === 0) {
-    localStorage.setItem('cs_cats', JSON.stringify([
-      { id: 1, name: 'مشويات' },
-      { id: 2, name: 'مقبلات وسلطات' },
-      { id: 3, name: 'مشروبات' },
-      { id: 4, name: 'حلويات' }
-    ]));
-  }
-  if (DB.getItems().length === 0) {
-    localStorage.setItem('cs_items', JSON.stringify([
-      { id: 1, name: 'كباب مشكل', price: 95, catId: 1, code: 'K01', available: true },
-      { id: 2, name: 'شيش طاووق', price: 75, catId: 1, code: 'K02', available: true },
-      { id: 3, name: 'فراخ مشوية على الفحم', price: 90, catId: 1, code: 'K03', available: true },
-      { id: 4, name: 'حمام محشي أرز', price: 80, catId: 1, code: 'K04', available: true },
-      { id: 5, name: 'سلطة خضراء', price: 25, catId: 2, code: 'M01', available: true },
-      { id: 6, name: 'متبل باذنجان', price: 20, catId: 2, code: 'M02', available: true },
-      { id: 7, name: 'حمص بالشامي', price: 20, catId: 2, code: 'M03', available: true },
-      { id: 8, name: 'عصير برتقال فريش', price: 25, catId: 3, code: 'D01', available: true },
-      { id: 9, name: 'شاي تلقيمة بالنعناع', price: 15, catId: 3, code: 'D02', available: true },
-      { id: 10, name: 'مياه معدنية', price: 10, catId: 3, code: 'D03', available: true },
-      { id: 11, name: 'أم علي بالمكسرات', price: 35, catId: 4, code: 'S01', available: true },
-      { id: 12, name: 'كنافة نابلسية بالجبن', price: 45, catId: 4, code: 'S02', available: true }
-    ]));
-  }
-}
-seedMenuIfEmpty();
+// ملاحظة: بيانات الأقسام والأصناف بقت تُزرع من data/catalog/*.json
+// عن طريق DataService.init(['categories','items']) فوق، بدل ما كانت
+// مكتوبة مباشرة هنا. الكاش المحلي (localStorage: cs_cats / cs_items)
+// لسه هو نفسه، فباقي الكود في الصفحة دي مش محتاج يتغير.
 
 // -------------------------------------------------------------
 // Initialization & URL Params Handling

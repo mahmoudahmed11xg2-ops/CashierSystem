@@ -527,6 +527,11 @@ table.custom-table tr:hover td { background: var(--surface2); }
 
 <script type="module">
 import AuthService from './auth.js';
+import DataService from './js/dataService.js';
+
+// تحميل بيانات المخزون والريسيبي من data/ وزرعها في الكاش المحلي
+// لو أول مرة (بدل الأرقام الثابتة اللي كانت هنا قبل كده)
+await DataService.init(['stock', 'recipes']);
 
 // Enforce RBAC
 if (!AuthService.enforcePage('inventory.html')) {
@@ -549,21 +554,9 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Seed default stock if empty
-function seedStockIfEmpty() {
-  const raw = localStorage.getItem('cs_stock');
-  if (!raw || JSON.parse(raw).length === 0) {
-    localStorage.setItem('cs_stock', JSON.stringify([
-      { id: 1, name: 'لحم كباب متبل', unit: 'كجم', qty: 24.5, min: 5, cost: 280 },
-      { id: 2, name: 'شيش دجاج متبل', unit: 'كجم', qty: 18.0, min: 4, cost: 160 },
-      { id: 3, name: 'دجاج مجهز للشوي', unit: 'قطعة', qty: 32, min: 8, cost: 75 },
-      { id: 4, name: 'أرز بسمتي', unit: 'كجم', qty: 45.0, min: 10, cost: 65 },
-      { id: 5, name: 'طماطم وخضار سلطة', unit: 'كجم', qty: 12.0, min: 3, cost: 20 },
-      { id: 6, name: 'برتقال بلدي للعصير', unit: 'كجم', qty: 2.5, min: 5, cost: 18 } // Low stock
-    ]));
-  }
-}
-seedStockIfEmpty();
+// ملاحظة: بيانات المخزون بقت تُزرع من data/inventory/stock.json عن
+// طريق DataService.init(['stock','recipes']) فوق، بدل ما كانت مكتوبة
+// مباشرة هنا. الكاش المحلي (localStorage: cs_stock) لسه هو نفسه.
 
 window.switchTab = function(tabName) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
